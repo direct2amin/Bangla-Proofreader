@@ -7,7 +7,10 @@
 
 ## 📥 ডাউনলোড ও ইনস্টলেশন (Download for Windows)
 
-সোর্স কোড ছাড়া সরাসরি উইন্ডোজে ব্যবহার করতে চাইলে এই রিপোজিটরির **[Releases](../../releases)** সেকশন থেকে সর্বশেষ **`BanglaProofreader_Setup_v1.4.0.exe`** ইনস্টলারটি ডাউনলোড করে ইনস্টল করুন।
+সোর্স কোড ছাড়া সরাসরি উইন্ডোজে ব্যবহার করতে চাইলে নিচের লিংকে ক্লিক করে সরাসরি ইনস্টলারটি ডাউনলোড করুন:
+
+👉 **[⬇️ Download BanglaProofreader_Setup_v1.4.0.exe (Windows Installer)](https://github.com/direct2amin/Bangla-Proofreader/raw/main/releases/BanglaProofreader_Setup_v1.4.0.exe)**  
+*(অথবা এই রিপোজিটরির **[Releases](https://github.com/direct2amin/Bangla-Proofreader/releases)** ও **[`releases/`](releases/)** ফোল্ডার থেকেও ডাউনলোড করতে পারবেন)*
 
 ---
 
@@ -69,8 +72,8 @@ Bangla-Proofreader/
 
 ### ১. রিপোজিটরি ক্লোন করুন
 ```powershell
-git clone https://github.com/direct2amin/bangla-proofreader.git
-cd bangla-proofreader
+git clone https://github.com/direct2amin/Bangla-Proofreader.git
+cd Bangla-Proofreader
 ```
 
 ### ২. ডিপেন্ডেন্সি ইনস্টল করুন

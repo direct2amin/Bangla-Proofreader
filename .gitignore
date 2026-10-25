@@ -11,11 +11,12 @@ __pycache__/
 *$py.class
 *.so
 
-# PyInstaller & Inno Setup build outputs
+# PyInstaller & Inno Setup intermediate build outputs
 build/
 dist/
 dist_installer/
-releases/*.exe
+releases/BanglaProofreader_Setup_v1.2.0.exe
+releases/BanglaProofreader_Setup_v1.3.0.exe
 
 # Temporary scratch files & OS metadata
 scratch/
