@@ -5,7 +5,7 @@ from __future__ import annotations
 MESSAGES = {
     "en": {
         "app_title": "Bangla Proofreader",
-        "app_subtitle": "AI-Powered Desktop Utility for Bangla Proofreading & Linguistic Correction",
+        "app_subtitle": "AI Assisted Desktop Utility for Bangla Proofreading & Linguistic Correction",
         "gemini_api_key": "Gemini API Key:",
         "save_key": "Save Key",
         "api_guide_btn": "How to get API Key?",
@@ -88,7 +88,7 @@ MESSAGES = {
         "about_developer_label": "Developer / Publisher:",
         "about_developer_name": "Amin",
         "about_portfolio_label": "Portfolio / GitHub:",
-        "about_description": "A lightweight Windows utility for offline and online Bengali proofreading and spell-checking.",
+        "about_description": "An AI Assisted Windows utility for accurate Bengali proofreading, Bijoy-to-Unicode conversion, and spell-checking.",
         # Settings Dialog
         "settings_dialog_title": "Settings - Bangla Proofreader",
         "settings_theme_group": "Appearance & Theme",
@@ -109,7 +109,7 @@ MESSAGES = {
     },
     "bn": {
         "app_title": "Bangla Proofreader",
-        "app_subtitle": "কৃত্রিম বুদ্ধিমত্তা চালিত বাংলা বানান ও ব্যাকরণ শুদ্ধিকরণ টুল",
+        "app_subtitle": "এআই-সহায়ক (AI Assisted) বাংলা বানান ও ব্যাকরণ শুদ্ধিকরণ টুল",
         "gemini_api_key": "জেমিনি এপিআই কী:",
         "save_key": "সংরক্ষণ করুন",
         "api_guide_btn": "কীভাবে এপিআই কী পাবেন?",
@@ -160,8 +160,8 @@ MESSAGES = {
         "format_punct_btn": "দাঁড়ি-কমা ঠিক করুন",
         "punct_formatted_feedback": "দাঁড়ি, কমা ও লাইন ব্রেক সফলভাবে বিন্যস্ত করা হয়েছে!",
         "error_title": "প্রুফরিডিং ত্রুটি",
-        "progress_starting": "আপনার লেখাটি এআই দ্বারা সংশোধন করা হচ্ছে, অনুগ্রহ করে কিছুক্ষণ অপেক্ষা করুন...",
-        "progress_sending": "আপনার লেখাটি এআই দ্বারা সংশোধন করা হচ্ছে, অনুগ্রহ করে কিছুক্ষণ অপেক্ষা করুন...",
+        "progress_starting": "আপনার লেখাটি এআই সহায়তায় (AI Assisted) সংশোধন করা হচ্ছে, অনুগ্রহ করে কিছুক্ষণ অপেক্ষা করুন...",
+        "progress_sending": "আপনার লেখাটি এআই সহায়তায় (AI Assisted) সংশোধন করা হচ্ছে, অনুগ্রহ করে কিছুক্ষণ অপেক্ষা করুন...",
         "progress_analyzing": "শব্দভিত্তিক পার্থক্য বিশ্লেষণ করা হচ্ছে...",
         "progress_done": "প্রুফরিডিং সফলভাবে সম্পন্ন হয়েছে!",
         "lang_switch_tooltip": "Switch Language (ভাষা পরিবর্তন)",
@@ -192,7 +192,7 @@ MESSAGES = {
         "about_developer_label": "ডেভেলপার / প্রকাশক:",
         "about_developer_name": "আমিন",
         "about_portfolio_label": "পোর্টফোলিও / গিটহাব:",
-        "about_description": "বাংলা বানান ও ব্যাকরণ শুদ্ধিকরণের জন্য একটি আধুনিক ও কার্যকর উইন্ডোজ ইউটিলিটি।",
+        "about_description": "বাংলা বানান ও ব্যাকরণ শুদ্ধিকরণের জন্য একটি আধুনিক এআই-সহায়ক (AI Assisted) উইন্ডোজ ইউটিলিটি।",
         # Settings Dialog
         "settings_dialog_title": "সেটিংস - বাংলা প্রুফরিডার",
         "settings_theme_group": "থিম ও ডিসপ্লে",

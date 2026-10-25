@@ -1,7 +1,7 @@
 # 🇧🇩 বাংলা প্রুফরিডার (Bangla Proofreader) — v1.4.0
 
-> **AI-Powered Windows Desktop Utility for Bangla Proofreading, Bijoy-to-Unicode Conversion & Linguistic Correction**  
-> সিস্টেম-ওয়াইড গ্লোবাল শর্টকাট, অটোমেটিক বিজয়-টু-ইউনিকোড কনভার্টার, আরবি স্ক্রিপ্ট প্রোটেকশন এবং Google Gemini AI সমর্থিত আধুনিক বাংলা প্রুফরিডার।
+> **AI Assisted Windows Desktop Utility for Bangla Proofreading, Bijoy-to-Unicode Conversion & Linguistic Correction**  
+> সিস্টেম-ওয়াইড গ্লোবাল শর্টকাট, অটোমেটিক বিজয়-টু-ইউনিকোড কনভার্টার, আরবি স্ক্রিপ্ট প্রোটেকশন এবং এআই-সহায়ক (AI Assisted) আধুনিক বাংলা প্রুফরিডার।
 
 ---
 

@@ -178,7 +178,7 @@ def preserve_line_structure(original: str, corrected: str) -> str:
 
 
 class GeminiProofreaderEngine:
-    """Proofreading engine powered solely by Google Gemini API using ultra-fast Flash models."""
+    """AI Assisted proofreading engine using Google Gemini API with ultra-fast Flash models."""
 
     def __init__(self, api_key: Optional[str] = None, model_name: str = "gemini-3.5-flash"):
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY", "")
