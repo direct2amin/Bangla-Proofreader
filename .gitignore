@@ -1,0 +1,24 @@
+# Protect user configuration and personal API keys
+config.json
+.env
+
+# Python virtual environments & bytecode
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# PyInstaller & Inno Setup build outputs
+build/
+dist/
+dist_installer/
+releases/*.exe
+
+# Temporary scratch files & OS metadata
+scratch/
+.DS_Store
+Thumbs.db
+*.log

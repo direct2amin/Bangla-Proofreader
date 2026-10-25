@@ -1,0 +1,254 @@
+"""Internationalization (i18n) module supporting pure English and pure Bangla."""
+
+from __future__ import annotations
+
+MESSAGES = {
+    "en": {
+        "app_title": "Bangla Proofreader",
+        "app_subtitle": "AI-Powered Desktop Utility for Bangla Proofreading & Linguistic Correction",
+        "gemini_api_key": "Gemini API Key:",
+        "save_key": "Save Key",
+        "api_guide_btn": "How to get API Key?",
+        "about_btn": "About",
+        "api_saved": "Gemini API Key saved successfully!",
+        "api_cleared": "API Key removed.",
+        "api_ready": "Google Gemini AI is connected and ready.",
+        "api_missing": "Gemini API Key is required. Please enter your API key above and click Save.",
+        "paste_btn": "Paste",
+        "proofread_btn": "Proofread",
+        "clear_btn": "Clear",
+        "copy_btn": "Copy Corrected Text",
+        "replace_btn": "Replace in Active App",
+        "settings_btn": "Settings",
+        "zoom_label": "Font:",
+        "accept_all": "Accept All",
+        "reject_all": "Reject All",
+        "exclude_foreign_btn": "Exclude Arabic Words",
+        "foreign_excluded_feedback": "Arabic words excluded (kept as original)!",
+        "tab_side_by_side": "Side-by-Side Review",
+        "tab_inline_diff": "Inline Diff",
+        "tab_changes_list": "Changes List",
+        "orig_header": "Original Text:",
+        "corr_header": "Corrected Text:",
+        "inline_header": "Unified Differences (Red: Removed, Green: Corrected):",
+        "table_instruction": "Check [✓] the changes you want to keep:",
+        "col_keep": "Keep?",
+        "col_original": "Original",
+        "col_suggested": "Suggested",
+        "col_type": "Type",
+        "type_replace": "Spelling Correction",
+        "type_arabic": "Arabic Word",
+        "type_foreign": "Foreign Word",
+        "type_punct": "Punctuation / Spacing",
+        "type_insert": "Addition",
+        "type_delete": "Deletion",
+        "stats_ready": "Ready",
+        "stats_format": "Words: {orig} | Suggestions: {total} (Accepted: {acc}, Rejected: {rej})",
+        "status_shortcut": "Bangla Proofreader Active | Global Shortcut: Ctrl+Alt+B",
+        "copied_feedback": "Corrected text copied to clipboard!",
+        "replacing_feedback": "Injecting into active application...",
+        "no_text_feedback": "Nothing to copy.",
+        "no_replace_feedback": "Nothing to replace.",
+        "no_input_warn": "Please provide some text to proofread.",
+        "no_text_selected_warn": "No text was selected. Please select text in your app and press Ctrl+Alt+B, or paste directly.",
+        "api_missing_warn_title": "Gemini API Key Required",
+        "api_missing_warn_msg": "Proofreading requires a Gemini API Key.\nPlease enter your API key above and click Save Key.",
+        "format_punct_btn": "Format Punctuation",
+        "punct_formatted_feedback": "Punctuation and line breaks formatted successfully!",
+        "error_title": "Proofreading Error",
+        "progress_starting": "Proofreading your text, please wait a moment...",
+        "progress_sending": "Proofreading your text, please wait a moment...",
+        "progress_analyzing": "Analyzing word-level differences...",
+        "progress_done": "Proofreading completed successfully!",
+        "lang_switch_tooltip": "Switch Language (ভাষা পরিবর্তন)",
+        "lang_btn_text": "English",
+        "confirm_save_key_title": "Confirm API Key",
+        "confirm_save_key_msg": "Are you sure you want to save this Gemini API Key?",
+        "confirm_clear_key_msg": "Are you sure you want to remove the Gemini API Key?",
+        "error_invalid_key": "Your Gemini API Key is invalid or incorrect.\n\nPlease obtain a valid API key from Google AI Studio and enter it in the app.",
+        "error_quota_exceeded": "Google Gemini API quota or rate limit exceeded.\n\nPlease wait a moment and try again.",
+        "error_network": "Network connection error.\n\nPlease check your internet connection and try again.",
+        "error_general": "An error occurred while communicating with Google Gemini AI.\n\nPlease try again in a few moments.",
+        "guide_dialog_title": "How to Get a Free Gemini API Key",
+        "guide_dialog_subtitle": "Follow these 5 simple steps to get your free Google Gemini API key:",
+        "guide_step_1": "Step 1: Click the \"Open Google AI Studio\" button below or click the link to copy https://aistudio.google.com/app/apikey:",
+        "guide_step_2": "Step 2: Sign in with your standard Google Account (No payment or credit card required).",
+        "guide_step_3": "Step 3: Click \"Create API key\" (or \"Get API key\").",
+        "guide_step_4": "Step 4: Copy the newly generated key to your clipboard.",
+        "guide_step_5": "Step 5: Paste the copied key into the \"Gemini API Key\" field in this app and click \"Save\".",
+        "guide_note": "Note: Google Gemini API is 100% free for personal usage with generous daily quotas. No credit card or billing details required.",
+        "open_aistudio_btn": "Open Google AI Studio in Browser",
+        "copy_link_btn": "Copy Link",
+        "copy_link_btn_copied": "✓ Link Copied!",
+        "close_btn": "Close",
+        # About Dialog
+        "about_dialog_title": "About Bangla Proofreader",
+        "about_app_name": "বাংলা প্রুফরিডার (Bangla Proofreader)",
+        "about_version": "Version 1.4.0",
+        "about_developer_label": "Developer / Publisher:",
+        "about_developer_name": "Amin",
+        "about_portfolio_label": "Portfolio / GitHub:",
+        "about_description": "A lightweight Windows utility for offline and online Bengali proofreading and spell-checking.",
+        # Settings Dialog
+        "settings_dialog_title": "Settings - Bangla Proofreader",
+        "settings_theme_group": "Appearance & Theme",
+        "settings_theme_label": "Theme:",
+        "theme_light": "Light Mode",
+        "theme_dark": "Dark Mode",
+        "theme_system": "System Default (Match OS)",
+        "settings_api_group": "Google Gemini API Configuration",
+        "settings_api_key_label": "API Key:",
+        "settings_api_key_placeholder": "Enter your Gemini API Key...",
+        "settings_behavior_group": "Shortcuts & System Behavior",
+        "settings_shortcut_label": "Global Shortcut:",
+        "settings_auto_inject": "Auto-inject corrected text into active application",
+        "settings_minimize_tray": "Minimize to system tray when closed or minimized",
+        "settings_start_windows": "Start automatically with Windows on boot",
+        "settings_save_btn": "Save Settings",
+        "settings_cancel_btn": "Cancel",
+    },
+    "bn": {
+        "app_title": "Bangla Proofreader",
+        "app_subtitle": "কৃত্রিম বুদ্ধিমত্তা চালিত বাংলা বানান ও ব্যাকরণ শুদ্ধিকরণ টুল",
+        "gemini_api_key": "জেমিনি এপিআই কী:",
+        "save_key": "সংরক্ষণ করুন",
+        "api_guide_btn": "কীভাবে এপিআই কী পাবেন?",
+        "about_btn": "সম্পর্কে",
+        "api_saved": "জেমিনি এপিআই কী সংরক্ষিত হয়েছে!",
+        "api_cleared": "এপিআই কী মুছে ফেলা হয়েছে।",
+        "api_ready": "গুগল জেমিনি এআই সংযুক্ত এবং প্রুফরিডিংয়ের জন্য প্রস্তুত।",
+        "api_missing": "জেমিনি এপিআই কী প্রয়োজন। অনুগ্রহ করে ওপরে আপনার এপিআই কী দিয়ে সেভ করুন।",
+        "paste_btn": "পেস্ট করুন",
+        "proofread_btn": "সংশোধন করুন",
+        "clear_btn": "মুছে ফেলুন",
+        "copy_btn": "সংশোধিত লেখা কপি করুন",
+        "replace_btn": "সক্রিয় অ্যাপে প্রতিস্থাপন",
+        "settings_btn": "সেটিংস",
+        "zoom_label": "ফন্ট:",
+        "accept_all": "সবগুলো গ্রহণ করুন",
+        "reject_all": "সবগুলো বাতিল করুন",
+        "exclude_foreign_btn": "আরবি শব্দ বাদ দিন",
+        "foreign_excluded_feedback": "আরবি শব্দের পরিবর্তনগুলো বাদ দেওয়া হয়েছে (মূল রূপ বহাল)!",
+        "tab_side_by_side": "পাশাপাশি তুলনা",
+        "tab_inline_diff": "একত্রিত রূপ",
+        "tab_changes_list": "পরিবর্তনের তালিকা",
+        "orig_header": "মূল লেখা:",
+        "corr_header": "সংশোধিত রূপ:",
+        "inline_header": "একত্রিত পরিবর্তন (লাল: অশুদ্ধ, সবুজ: সংশোধিত):",
+        "table_instruction": "যে পরিবর্তনগুলো রাখতে চান সেগুলোতে টিকচিহ্ন [✓] দিয়ে রাখুন:",
+        "col_keep": "রাখবেন?",
+        "col_original": "মূল শব্দ",
+        "col_suggested": "প্রস্তাবিত রূপ",
+        "col_type": "ধরন",
+        "type_replace": "বানান শুদ্ধিকরণ",
+        "type_arabic": "আরবি শব্দ",
+        "type_foreign": "বিদেশি শব্দ",
+        "type_punct": "বিরামচিহ্ন / স্পেস",
+        "type_insert": "নতুন সংযোজন",
+        "type_delete": "অপসারণ",
+        "stats_ready": "প্রস্তুত",
+        "stats_format": "মোট শব্দ: {orig} | প্রস্তাবিত পরিবর্তন: {total} (গৃহীত: {acc}, বাতিল: {rej})",
+        "status_shortcut": "বাংলা প্রুফরিডার সক্রিয় | গ্লোবাল শর্টকাট: Ctrl+Alt+B",
+        "copied_feedback": "সংশোধিত লেখা ক্লিপবোর্ডে কপি হয়েছে!",
+        "replacing_feedback": "সক্রিয় অ্যাপে প্রতিস্থাপন করা হচ্ছে...",
+        "no_text_feedback": "কপি করার মতো লেখা নেই।",
+        "no_replace_feedback": "প্রতিস্থাপন করার মতো লেখা নেই।",
+        "no_input_warn": "অনুগ্রহ করে কোনো বাংলা লেখা ইনপুট দিন।",
+        "no_text_selected_warn": "কোনো টেক্সট সিলেক্ট করা হয়নি। অনুগ্রহ করে টেক্সট সিলেক্ট করে Ctrl+Alt+B চাপুন, অথবা সরাসরি পেস্ট করুন।",
+        "api_missing_warn_title": "এপিআই কী প্রয়োজন",
+        "api_missing_warn_msg": "প্রুফরিড করার জন্য জেমিনি এপিআই কী আবশ্যক।\nঅনুগ্রহ করে ওপরে আপনার এপিআই কী প্রদান করে সেভ করুন।",
+        "format_punct_btn": "দাঁড়ি-কমা ঠিক করুন",
+        "punct_formatted_feedback": "দাঁড়ি, কমা ও লাইন ব্রেক সফলভাবে বিন্যস্ত করা হয়েছে!",
+        "error_title": "প্রুফরিডিং ত্রুটি",
+        "progress_starting": "আপনার লেখাটি এআই দ্বারা সংশোধন করা হচ্ছে, অনুগ্রহ করে কিছুক্ষণ অপেক্ষা করুন...",
+        "progress_sending": "আপনার লেখাটি এআই দ্বারা সংশোধন করা হচ্ছে, অনুগ্রহ করে কিছুক্ষণ অপেক্ষা করুন...",
+        "progress_analyzing": "শব্দভিত্তিক পার্থক্য বিশ্লেষণ করা হচ্ছে...",
+        "progress_done": "প্রুফরিডিং সফলভাবে সম্পন্ন হয়েছে!",
+        "lang_switch_tooltip": "Switch Language (ভাষা পরিবর্তন)",
+        "lang_btn_text": "বাংলা",
+        "confirm_save_key_title": "এপিআই কী নিশ্চিতকরণ",
+        "confirm_save_key_msg": "আপনি কি নিশ্চিত যে আপনি এই জেমিনি এপিআই কী-টি সংরক্ষণ করতে চান?",
+        "confirm_clear_key_msg": "আপনি কি নিশ্চিত যে আপনি জেমিনি এপিআই কী-টি মুছে ফেলতে চান?",
+        "error_invalid_key": "আপনার এপিআই কী (API Key) টি সঠিক নয়।\n\nঅনুগ্রহ করে গুগল এআই স্টুডিও (Google AI Studio) থেকে আপনার সঠিক এপিআই কী সংগ্রহ করে ব্যবহার করুন।",
+        "error_quota_exceeded": "গুগল জেমিনি এপিআই এর অনুরোধ সীমা বা দৈনিক ফ্রি কোটা অতিক্রম করেছে (Quota Exceeded)।\n\nঅনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।",
+        "error_network": "ইন্টারনেট সংযোগে ত্রুটি দেখা দিয়েছে।\n\nঅনুগ্রহ করে আপনার ইন্টারনেট কানেকশন পরীক্ষা করে পুনরায় চেষ্টা করুন।",
+        "error_general": "প্রুফরিডিং করার সময় এআই সার্ভারে একটি সমস্যা দেখা দিয়েছে।\n\nঅনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।",
+        "guide_dialog_title": "কীভাবে বিনামূল্যে জেমিনি এপিআই কী পাবেন",
+        "guide_dialog_subtitle": "নিচের ৫টি সহজ ধাপ অনুসরণ করে আপনার ফ্রি গুগল জেমিনি এপিআই কী তৈরি করুন:",
+        "guide_step_1": "ধাপ ১: নিচের 'গুগল এআই স্টুডিও খুলুন' বাটনে ক্লিক করুন অথবা লিঙ্কে ক্লিক করে https://aistudio.google.com/app/apikey কপি করুন:",
+        "guide_step_2": "ধাপ ২: আপনার সাধারণ গুগল অ্যাকাউন্ট দিয়ে সাইন-ইন করুন (কোনো ক্রেডিট কার্ড বা পেমেন্টের প্রয়োজন নেই)।",
+        "guide_step_3": "ধাপ ৩: 'Create API key' (অথবা 'Get API key') বাটনে ক্লিক করুন।",
+        "guide_step_4": "ধাপ ৪: তৈরি হওয়া নতুন এপিআই কী-টি ক্লিপবোর্ডে কপি করুন।",
+        "guide_step_5": "ধাপ ৫: এই অ্যাপের 'জেমিনি এপিআই কী' ঘরে পেস্ট করে 'সংরক্ষণ করুন' বাটনে ক্লিক করুন।",
+        "guide_note": "বিশেষ দ্রষ্টব্য: গুগল জেমিনি এপিআই ব্যক্তিগত ব্যবহারের জন্য সম্পূর্ণ বিনামূল্যে পাওয়া যায়। কোনো ক্রেডিট কার্ড বা পেমেন্ট তথ্যের প্রয়োজন নেই।",
+        "open_aistudio_btn": "ব্রাউজারে গুগল এআই স্টুডিও খুলুন",
+        "copy_link_btn": "লিঙ্ক কপি করুন",
+        "copy_link_btn_copied": "✓ লিঙ্ক কপি হয়েছে!",
+        "close_btn": "বন্ধ করুন",
+        # About Dialog
+        "about_dialog_title": "বাংলা প্রুফরিডার সম্পর্কে",
+        "about_app_name": "বাংলা প্রুফরিডার (Bangla Proofreader)",
+        "about_version": "ভার্সন ১.৪.০",
+        "about_developer_label": "ডেভেলপার / প্রকাশক:",
+        "about_developer_name": "আমিন",
+        "about_portfolio_label": "পোর্টফোলিও / গিটহাব:",
+        "about_description": "বাংলা বানান ও ব্যাকরণ শুদ্ধিকরণের জন্য একটি আধুনিক ও কার্যকর উইন্ডোজ ইউটিলিটি।",
+        # Settings Dialog
+        "settings_dialog_title": "সেটিংস - বাংলা প্রুফরিডার",
+        "settings_theme_group": "থিম ও ডিসপ্লে",
+        "settings_theme_label": "থিম:",
+        "theme_light": "লাইট মোড",
+        "theme_dark": "ডার্ক মোড",
+        "theme_system": "সিস্টেম অনুযায়ী (ডিফল্ট)",
+        "settings_api_group": "গুগল জেমিনি এপিআই কনফিগারেশন",
+        "settings_api_key_label": "এপিআই কী:",
+        "settings_api_key_placeholder": "আপনার জেমিনি এপিআই কী দিন...",
+        "settings_behavior_group": "শর্টকাট ও সিস্টেম আচরণ",
+        "settings_shortcut_label": "গ্লোবাল শর্টকাট:",
+        "settings_auto_inject": "সক্রিয় অ্যাপ্লিকেশনে স্বয়ংক্রিয়ভাবে টেক্সট প্রতিস্থাপন",
+        "settings_minimize_tray": "উইন্ডো বন্ধ বা মিনিমাইজ করলে সিস্টেম ট্রেতে রাখুন",
+        "settings_start_windows": "উইন্ডোজ চালুর সাথে সাথে স্বয়ংক্রিয়ভাবে চালু করুন",
+        "settings_save_btn": "সংরক্ষণ করুন",
+        "settings_cancel_btn": "বাতিল",
+    }
+}
+
+
+def t(key: str, lang: str = "en", **kwargs) -> str:
+    """Retrieve localized message string."""
+    lang_dict = MESSAGES.get(lang, MESSAGES["en"])
+    template = lang_dict.get(key, MESSAGES["en"].get(key, key))
+    if kwargs:
+        return template.format(**kwargs)
+    return template
+
+
+def format_gemini_error(err: Exception | str, lang: str = "en") -> str:
+    """
+    Format raw technical Gemini API errors into a clear, user-friendly message.
+    Prevents raw JSON/RPC 401 dumps from scaring users.
+    """
+    err_str = str(err).lower()
+
+    # 1. Invalid or wrong API key
+    if any(k in err_str for k in [
+        "401", "unauthenticated", "api_key_invalid", "invalid_api_key",
+        "invalid authentication credentials", "expected oauth 2",
+        "access_token_type_unsupported", "api key not valid", "forbidden", "403"
+    ]):
+        return t("error_invalid_key", lang)
+
+    # 2. Quota / Rate limit exceeded
+    if any(k in err_str for k in ["429", "resource_exhausted", "quota", "rate limit", "rate_limit"]):
+        return t("error_quota_exceeded", lang)
+
+    # 3. Network or connection failure
+    if any(k in err_str for k in [
+        "connection", "timeout", "network", "socket", "getaddrinfo",
+        "nameresolutionerror", "failed to establish a new connection"
+    ]):
+        return t("error_network", lang)
+
+    # 4. Fallback for any other unexpected error
+    return t("error_general", lang)
+

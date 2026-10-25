@@ -1,0 +1,11 @@
+{
+  "gemini_api_key": "",
+  "gemini_model": "gemini-3.5-flash",
+  "shortcut": "ctrl+alt+b",
+  "auto_paste": true,
+  "ui_language": "en",
+  "minimize_to_tray_on_close": true,
+  "start_with_windows": false,
+  "editor_font_size": 14,
+  "theme": "system"
+}
