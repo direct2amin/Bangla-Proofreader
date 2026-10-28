@@ -9,6 +9,7 @@ from typing import Optional
 
 from app.core.config import load_config, save_config
 from app.engines.gemini_engine import GeminiProofreaderEngine
+from app.engines.sentence_polisher import SentencePolishResult, SentencePolisher
 from app.utils.bijoy_converter import convert_bijoy_to_unicode, is_bijoy_text
 from app.utils.offline_checker import OfflineSpellChecker
 
@@ -56,6 +57,7 @@ class EngineManager:
             self.auto_switched_offline = True
 
         self.gemini_engine = GeminiProofreaderEngine(api_key=api_key, model_name=model_name)
+        self.sentence_polisher = SentencePolisher(api_key=api_key)
         self.offline_checker = OfflineSpellChecker()
 
     @staticmethod
@@ -106,3 +108,18 @@ class EngineManager:
             )
 
         return self.gemini_engine.proofread(text)
+
+    def polish_sentences(self, text: str) -> SentencePolishResult:
+        """Execute sentence-level stylistic polishing via Gemini AI."""
+        if not text or not text.strip():
+            return SentencePolishResult(original_text=text, full_polished_text=text, changes=[])
+
+        if is_bijoy_text(text):
+            text = convert_bijoy_to_unicode(text)
+
+        if not self.gemini_engine.is_available():
+            raise RuntimeError(
+                "Gemini API Key সংযুক্ত করা নেই। বাক্য পরিমার্জনের জন্য অনুগ্রহ করে ওপরে আপনার API Key দিয়ে সেভ করুন।"
+            )
+
+        return self.sentence_polisher.polish_text(text)

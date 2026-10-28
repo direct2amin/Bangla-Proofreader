@@ -181,6 +181,25 @@ QPushButton#PrimaryBtn:disabled {{
     color: #6ee7b7;
 }}
 
+QPushButton#SecondaryBtn {{
+    background-color: transparent;
+    color: #38bdf8;
+    border: 1.5px solid #0284c7;
+    font-weight: 600;
+}}
+
+QPushButton#SecondaryBtn:hover {{
+    background-color: #0c4a6e;
+    color: #bae6fd;
+    border-color: #38bdf8;
+}}
+
+QPushButton#SecondaryBtn:disabled {{
+    border-color: #334155;
+    color: #64748b;
+    background-color: transparent;
+}}
+
 QPushButton#SuccessBtn {{
     background-color: #15803d;
     color: #ffffff;
@@ -458,6 +477,25 @@ QPushButton#PrimaryBtn:hover {{
 QPushButton#PrimaryBtn:disabled {{
     background-color: #a7f3d0;
     color: #ffffff;
+}}
+
+QPushButton#SecondaryBtn {{
+    background-color: transparent;
+    color: #0284c7;
+    border: 1.5px solid #0284c7;
+    font-weight: 600;
+}}
+
+QPushButton#SecondaryBtn:hover {{
+    background-color: #f0f9ff;
+    color: #0369a1;
+    border-color: #0369a1;
+}}
+
+QPushButton#SecondaryBtn:disabled {{
+    border-color: #cbd5e1;
+    color: #94a3b8;
+    background-color: transparent;
 }}
 
 QPushButton#SuccessBtn {{

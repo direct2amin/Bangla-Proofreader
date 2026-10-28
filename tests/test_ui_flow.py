@@ -56,19 +56,22 @@ class TestDiffWindowUI(unittest.TestCase):
 
         # Default is English
         self.assertEqual(window.lang, "en")
-        self.assertEqual(window.proofread_btn.text(), "Proofread")
+        self.assertEqual(window.proofread_btn.text(), "Word Proofread (AI)")
+        self.assertEqual(window.polish_btn.text(), "Sentence Polish (AI)")
         self.assertEqual(window.paste_btn.text(), "Paste")
 
         # Toggle to Bangla
         window.toggle_language()
         self.assertEqual(window.lang, "bn")
-        self.assertEqual(window.proofread_btn.text(), "সংশোধন করুন")
+        self.assertEqual(window.proofread_btn.text(), "শব্দ প্রুফরিড (AI Proofread)")
+        self.assertEqual(window.polish_btn.text(), "বাক্য পরিমার্জন (AI Sentence Polish)")
         self.assertEqual(window.paste_btn.text(), "পেস্ট করুন")
 
         # Toggle back to English
         window.toggle_language()
         self.assertEqual(window.lang, "en")
-        self.assertEqual(window.proofread_btn.text(), "Proofread")
+        self.assertEqual(window.proofread_btn.text(), "Word Proofread (AI)")
+        self.assertEqual(window.polish_btn.text(), "Sentence Polish (AI)")
 
     def test_left_red_marks_and_identical_line_spacing(self):
         engine_mgr = EngineManager()

@@ -10,7 +10,7 @@ from typing import Optional, Set
 try:
     from PyQt6.QtCore import Qt, Signal, Slot, QTimer, QThread, QEvent
     from PyQt6.QtGui import (
-        QFont, QIcon, QColor, QPixmap, QTextCursor, QTextBlockFormat, QTextCharFormat
+        QFont, QIcon, QColor, QPixmap, QTextCursor, QTextBlockFormat, QTextCharFormat, QBrush
     )
     from PyQt6.QtWidgets import (
         QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QSplitter,
@@ -22,7 +22,7 @@ try:
 except ImportError:
     from PySide6.QtCore import Qt, Signal, Slot, QTimer, QThread, QEvent
     from PySide6.QtGui import (
-        QFont, QIcon, QColor, QPixmap, QTextCursor, QTextBlockFormat, QTextCharFormat
+        QFont, QIcon, QColor, QPixmap, QTextCursor, QTextBlockFormat, QTextCharFormat, QBrush
     )
     from PySide6.QtWidgets import (
         QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QSplitter,
@@ -33,6 +33,7 @@ except ImportError:
     )
 
 from app.utils.diff_highlighter import DiffHighlighter, DiffResult, is_word
+from app.engines.sentence_polisher import SentencePolishResult, SentenceChange
 from app.utils.i18n import t, format_gemini_error
 from app.core.engine_manager import EngineManager
 from app.core.clipboard import ClipboardManager
@@ -91,6 +92,29 @@ class ProofreadWorker(QThread):
             self.error_signal.emit(str(e))
 
 
+class PolishWorker(QThread):
+    """Background worker thread to execute Sentence Polish asynchronously without UI freeze."""
+
+    progress_signal = Signal(str)
+    finished_signal = Signal(object)  # SentencePolishResult
+    error_signal = Signal(str)
+
+    def __init__(self, engine_manager: EngineManager, text: str, lang: str):
+        super().__init__()
+        self.engine_manager = engine_manager
+        self.text = text
+        self.lang = lang
+
+    def run(self):
+        try:
+            self.progress_signal.emit(t("progress_polishing", self.lang))
+            polish_result = self.engine_manager.polish_sentences(self.text)
+            self.finished_signal.emit(polish_result)
+        except Exception as e:
+            logger.error("PolishWorker error: %s", e)
+            self.error_signal.emit(str(e))
+
+
 class DiffWindow(QMainWindow):
     """Main Review & Diff Window with language toggle, threading, and selective changes."""
 
@@ -103,6 +127,10 @@ class DiffWindow(QMainWindow):
         self.last_diff_result: Optional[DiffResult] = None
         self.accepted_change_ids: Set[int] = set()
         self.worker: Optional[ProofreadWorker] = None
+        self.spelling_checked: bool = False
+        self.polish_worker: Optional[PolishWorker] = None
+        self.last_polish_result: Optional[SentencePolishResult] = None
+        self.accepted_sentence_ids: Set[int] = set()
 
         # Load configuration (Default language: English, Default theme: system)
         config = load_config()
@@ -234,6 +262,11 @@ class DiffWindow(QMainWindow):
         self.proofread_btn.clicked.connect(self.run_proofread)
         toolbar_layout.addWidget(self.proofread_btn)
 
+        self.polish_btn = QPushButton()
+        self.polish_btn.setObjectName("SecondaryBtn")
+        self.polish_btn.clicked.connect(self.run_sentence_polish)
+        toolbar_layout.addWidget(self.polish_btn)
+
         self.clear_btn = QPushButton()
         self.clear_btn.clicked.connect(self.clear_all)
         toolbar_layout.addWidget(self.clear_btn)
@@ -308,6 +341,7 @@ class DiffWindow(QMainWindow):
         self.orig_edit = QTextEdit()
         self.orig_edit.setAcceptRichText(False)
         self.orig_edit.setPlaceholderText("Paste or type Bangla text here...")
+        self.orig_edit.textChanged.connect(self.on_input_text_changed)
         left_layout.addWidget(self.orig_header)
         left_layout.addWidget(self.orig_edit)
 
@@ -410,6 +444,41 @@ class DiffWindow(QMainWindow):
         table_layout.addWidget(self.changes_table)
 
         self.tabs.addTab(table_widget, "")
+
+        # Dedicated Sentence Polish View Tab
+        sentence_widget = QWidget()
+        sentence_layout = QVBoxLayout(sentence_widget)
+        sentence_layout.setContentsMargins(4, 4, 4, 4)
+
+        sentence_controls = QHBoxLayout()
+        self.sentence_instruction = QLabel()
+        self.sentence_instruction.setStyleSheet("font-weight: 600; color: #475569;")
+        sentence_controls.addWidget(self.sentence_instruction)
+
+        sentence_controls.addStretch()
+
+        self.accept_all_sentences_btn = QPushButton()
+        self.accept_all_sentences_btn.clicked.connect(self.accept_all_sentences)
+        sentence_controls.addWidget(self.accept_all_sentences_btn)
+
+        self.reject_all_sentences_btn = QPushButton()
+        self.reject_all_sentences_btn.clicked.connect(self.reject_all_sentences)
+        sentence_controls.addWidget(self.reject_all_sentences_btn)
+
+        sentence_layout.addLayout(sentence_controls)
+
+        self.sentence_table = QTableWidget(0, 4)
+        self.sentence_table.setFont(bangla_font)
+        self.sentence_table.horizontalHeader().setFont(QFont(BANGLA_FONT, max(10, self.editor_font_size - 1)))
+        self.sentence_table.verticalHeader().setDefaultSectionSize(max(32, int(self.editor_font_size * 2.4)))
+        self.sentence_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        self.sentence_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        self.sentence_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
+        self.sentence_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
+        self.sentence_table.itemChanged.connect(self.on_sentence_checkbox_changed)
+        sentence_layout.addWidget(self.sentence_table)
+
+        self.tabs.addTab(sentence_widget, "")
         main_layout.addWidget(self.tabs, stretch=1)
 
         # 4. Bottom Action Bar & Status
@@ -505,6 +574,8 @@ class DiffWindow(QMainWindow):
 
         self.paste_btn.setText(t("paste_btn", lang))
         self.proofread_btn.setText(t("proofread_btn", lang))
+        if hasattr(self, "polish_btn"):
+            self.polish_btn.setText(t("polish_btn", lang))
         self.clear_btn.setText(t("clear_btn", lang))
         self.copy_btn.setText(t("copy_btn", lang))
         self.replace_btn.setText(t("replace_btn", lang))
@@ -512,6 +583,7 @@ class DiffWindow(QMainWindow):
         self.tabs.setTabText(0, t("tab_side_by_side", lang))
         self.tabs.setTabText(1, t("tab_inline_diff", lang))
         self.tabs.setTabText(2, t("tab_changes_list", lang))
+        self.tabs.setTabText(3, t("tab_sentence_polish", lang))
 
         self.orig_header.setText(t("orig_header", lang))
         self.corr_header.setText(t("corr_header", lang))
@@ -521,12 +593,27 @@ class DiffWindow(QMainWindow):
         self.reject_all_btn.setText(t("reject_all", lang))
         self.exclude_foreign_btn.setText(t("exclude_foreign_btn", lang))
 
+        if hasattr(self, "sentence_instruction"):
+            self.sentence_instruction.setText(t("tab_sentence_polish", lang))
+        if hasattr(self, "accept_all_sentences_btn"):
+            self.accept_all_sentences_btn.setText(t("accept_all", lang))
+        if hasattr(self, "reject_all_sentences_btn"):
+            self.reject_all_sentences_btn.setText(t("reject_all", lang))
+
         self.changes_table.setHorizontalHeaderLabels([
             t("col_keep", lang),
             t("col_original", lang),
             t("col_suggested", lang),
             t("col_type", lang)
         ])
+
+        if hasattr(self, "sentence_table"):
+            self.sentence_table.setHorizontalHeaderLabels([
+                t("col_keep", lang),
+                t("col_sentence_original", lang),
+                t("col_sentence_polished", lang),
+                t("col_sentence_reason", lang)
+            ])
 
         self.update_shortcut_status()
         self.update_api_status_banner()
@@ -727,6 +814,8 @@ class DiffWindow(QMainWindow):
     def set_actions_enabled(self, enabled: bool):
         """Enable or disable action buttons during background processing."""
         self.proofread_btn.setEnabled(enabled)
+        if hasattr(self, "polish_btn"):
+            self.polish_btn.setEnabled(enabled)
         self.paste_btn.setEnabled(enabled)
         self.clear_btn.setEnabled(enabled)
         self.copy_btn.setEnabled(enabled)
@@ -825,10 +914,15 @@ class DiffWindow(QMainWindow):
         self.progress_log_lbl.setVisible(True)
         self.progress_log_lbl.setText(message)
 
+    def on_input_text_changed(self):
+        """Reset sequence guardrail when input text is modified."""
+        self.spelling_checked = False
+
     def on_worker_finished(self, corrected_text: str, diff_result: DiffResult):
         """Called when background worker finishes successfully."""
         self.last_diff_result = diff_result
         self.accepted_change_ids = {c.change_id for c in diff_result.changes}
+        self.spelling_checked = True
 
         self.populate_changes_table(diff_result)
         self.refresh_views()
@@ -880,6 +974,181 @@ class DiffWindow(QMainWindow):
             formatted_msg,
             effective_theme=self.effective_theme,
         )
+
+    def run_sentence_polish(self):
+        """Execute AI Sentence Polish with strict sequence guardrail."""
+        original_text = self._get_orig_plain_text().strip()
+        if not original_text:
+            show_themed_message_box(
+                self,
+                "information",
+                t("error_title", self.lang),
+                t("no_input_warn", self.lang),
+                effective_theme=self.effective_theme,
+            )
+            return
+
+        # Sequence Guardrail check:
+        if not self.spelling_checked:
+            msg_box = QMessageBox(self)
+            msg_box.setIcon(QMessageBox.Icon.Warning)
+            msg_box.setWindowTitle(t("guardrail_title", self.lang))
+            msg_box.setText(t("guardrail_msg", self.lang))
+            ok_btn = msg_box.addButton(t("guardrail_ok", self.lang), QMessageBox.ButtonRole.AcceptRole)
+            msg_box.setDefaultButton(ok_btn)
+            msg_box.exec()
+            return
+
+        # Sentence Polish requires Online AI mode and internet
+        if self.engine_manager.get_mode() == "offline" or not self.engine_manager.is_internet_available():
+            show_themed_message_box(
+                self,
+                "warning",
+                t("guardrail_title", self.lang),
+                t("polish_offline_warn", self.lang),
+                effective_theme=self.effective_theme,
+            )
+            return
+
+        # Disconnect previous worker
+        if self.polish_worker is not None:
+            try:
+                self.polish_worker.progress_signal.disconnect(self.on_worker_progress)
+                self.polish_worker.finished_signal.disconnect(self.on_polish_worker_finished)
+                self.polish_worker.error_signal.disconnect(self.on_worker_error)
+            except Exception:
+                pass
+
+        self.set_actions_enabled(False)
+        if hasattr(self, "status_bar_separator"):
+            self.status_bar_separator.setVisible(True)
+        self.progress_bar.setVisible(True)
+        self.progress_log_lbl.setVisible(True)
+        self.progress_log_lbl.setText(t("progress_polishing", self.lang))
+        self.update_shortcut_status()
+
+        input_for_polish = self.corr_browser.toPlainText().strip() or original_text
+
+        self.polish_worker = PolishWorker(self.engine_manager, input_for_polish, self.lang)
+        self.polish_worker.progress_signal.connect(self.on_worker_progress)
+        self.polish_worker.finished_signal.connect(self.on_polish_worker_finished)
+        self.polish_worker.error_signal.connect(self.on_worker_error)
+        self.polish_worker.start()
+
+    def on_polish_worker_finished(self, polish_result: SentencePolishResult):
+        """Called when sentence polish finishes successfully."""
+        self.last_polish_result = polish_result
+        self.populate_sentence_table(polish_result)
+
+        # Switch to dedicated Sentence Polish tab
+        self.tabs.setCurrentIndex(3)
+
+        # Update corrected browser and diff view
+        self.corr_browser.setPlainText(polish_result.full_polished_text)
+        self.render_inline_diff(self._get_orig_plain_text(), polish_result.full_polished_text)
+
+        if hasattr(self, "status_bar_separator"):
+            self.status_bar_separator.setVisible(False)
+        self.progress_bar.setVisible(False)
+        self.progress_log_lbl.setVisible(False)
+        self.progress_log_lbl.setText("")
+        self.set_actions_enabled(True)
+        self.update_shortcut_status()
+        self.show_feedback(t("polish_done", self.lang))
+
+    def populate_sentence_table(self, polish_result: SentencePolishResult):
+        """Populate dedicated sentence polish comparison view with Keep/Reject checkboxes."""
+        self.sentence_table.blockSignals(True)
+        self.sentence_table.setRowCount(0)
+        self.accepted_sentence_ids = {c.change_id for c in polish_result.changes}
+
+        bangla_font = QFont(BANGLA_FONT, max(11, self.editor_font_size))
+        is_dark = (self.effective_theme == "dark")
+        orig_color = QColor("#f87171" if is_dark else "#dc2626")
+        pol_color = QColor("#4ade80" if is_dark else "#16a34a")
+
+        for row_idx, change in enumerate(polish_result.changes):
+            self.sentence_table.insertRow(row_idx)
+
+            chk_item = QTableWidgetItem()
+            chk_item.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
+            chk_item.setCheckState(Qt.CheckState.Checked)
+            chk_item.setData(Qt.ItemDataRole.UserRole, change.change_id)
+            self.sentence_table.setItem(row_idx, 0, chk_item)
+
+            orig_item = QTableWidgetItem(change.original)
+            orig_item.setFont(bangla_font)
+            orig_item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
+            orig_item.setForeground(QBrush(orig_color))
+            self.sentence_table.setItem(row_idx, 1, orig_item)
+
+            pol_item = QTableWidgetItem(change.polished)
+            pol_item.setFont(bangla_font)
+            pol_item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
+            pol_item.setForeground(QBrush(pol_color))
+            self.sentence_table.setItem(row_idx, 2, pol_item)
+
+            reason_item = QTableWidgetItem(change.reason)
+            reason_item.setFont(bangla_font)
+            reason_item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
+            self.sentence_table.setItem(row_idx, 3, reason_item)
+
+        self.sentence_table.blockSignals(False)
+
+    def render_inline_diff(self, orig: str, corr: str):
+        """Render inline and side-by-side diff between orig and corr text."""
+        diff_res = DiffHighlighter.compute_diff(orig, corr, is_dark=(self.effective_theme == "dark"))
+        self.last_diff_result = diff_res
+        self.accepted_change_ids = {c.change_id for c in diff_res.changes}
+        self.refresh_views()
+
+    def on_sentence_checkbox_changed(self, item: QTableWidgetItem):
+        """Handle toggling Keep/Reject checkbox in sentence polish table."""
+        if item.column() != 0 or not self.last_polish_result:
+            return
+        change_id = item.data(Qt.ItemDataRole.UserRole)
+        is_checked = (item.checkState() == Qt.CheckState.Checked)
+        if is_checked:
+            self.accepted_sentence_ids.add(change_id)
+        else:
+            self.accepted_sentence_ids.discard(change_id)
+        self.apply_sentence_changes()
+
+    def apply_sentence_changes(self):
+        """Reconstruct polished text based on accepted sentence selections."""
+        if not self.last_polish_result:
+            return
+        text = self.last_polish_result.full_polished_text
+        for change in self.last_polish_result.changes:
+            if change.change_id not in self.accepted_sentence_ids:
+                if change.polished in text:
+                    text = text.replace(change.polished, change.original, 1)
+        self.corr_browser.setPlainText(text)
+        self.render_inline_diff(self._get_orig_plain_text(), text)
+
+    def accept_all_sentences(self):
+        """Accept all sentence refinements."""
+        self.sentence_table.blockSignals(True)
+        for row in range(self.sentence_table.rowCount()):
+            item = self.sentence_table.item(row, 0)
+            if item:
+                item.setCheckState(Qt.CheckState.Checked)
+                cid = item.data(Qt.ItemDataRole.UserRole)
+                if cid is not None:
+                    self.accepted_sentence_ids.add(cid)
+        self.sentence_table.blockSignals(False)
+        self.apply_sentence_changes()
+
+    def reject_all_sentences(self):
+        """Reject all sentence refinements and revert to pre-polished text."""
+        self.sentence_table.blockSignals(True)
+        for row in range(self.sentence_table.rowCount()):
+            item = self.sentence_table.item(row, 0)
+            if item:
+                item.setCheckState(Qt.CheckState.Unchecked)
+        self.accepted_sentence_ids.clear()
+        self.sentence_table.blockSignals(False)
+        self.apply_sentence_changes()
 
     def populate_changes_table(self, diff_result: DiffResult):
         """Populate the changes table with interactive checkboxes."""
@@ -1080,6 +1349,11 @@ class DiffWindow(QMainWindow):
         self.inline_browser.clear()
         self.changes_table.setRowCount(0)
         self.accepted_change_ids.clear()
+        if hasattr(self, "sentence_table"):
+            self.sentence_table.setRowCount(0)
+            self.accepted_sentence_ids.clear()
+            self.last_polish_result = None
+        self.spelling_checked = False
         self.stats_label.setText(t("stats_ready", self.lang))
         self.last_diff_result = None
 
