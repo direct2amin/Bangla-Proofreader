@@ -2,6 +2,7 @@
 
 import os
 import unittest
+from unittest.mock import patch
 
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
 
@@ -52,7 +53,8 @@ class TestDiffWindowUI(unittest.TestCase):
 
     def test_language_toggle(self):
         engine_mgr = EngineManager()
-        window = DiffWindow(engine_manager=engine_mgr)
+        with patch("app.ui.diff_window.load_config", return_value={"ui_language": "en"}):
+            window = DiffWindow(engine_manager=engine_mgr)
 
         # Default is English
         self.assertEqual(window.lang, "en")

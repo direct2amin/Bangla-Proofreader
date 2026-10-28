@@ -100,6 +100,9 @@ ISLAMIC_AND_CULTURAL_VOCAB: Set[str] = {
         "ইতিকাফ", "ইতেকাফ", "সদকা", "সাদাকাহ", "ফিতরা", "কুরবানি", "কোরবানি", "আকিকা", "আকীকা",
         "জুমুআ", "জুমা", "জুমার", "জুমআ", "জুমআর", "ঈদ", "ঈদের", "রমজান", "রমযান", "রমজানের",
         "শাবান", "রজব", "মহররম", "শাওয়াল", "জিলহজ", "জিলকদ",
+        "আব্দুল্লাহ", "মুফাসসিরিন", "নিয়ত", "নিয়তের", "নিয়াত", "আহলে", "মুহাক্কিক", "মুহাক্কিকিন",
+        "সালাফি", "দেওবন্দি", "কওমি", "খাদেম", "খাদেমের", "মুহতামিম", "মুহতামিমের",
+        "ওয়াকফ", "ওয়াকফের", "সায়িম", "মুত্তাকি", "মুত্তাকির", "শাকের", "শাকেরের", "সাকের", "সাকেরের",
     ]
 }
 
@@ -346,6 +349,9 @@ DIRECT_CORRECTIONS: Dict[str, str] = {
         "পরিমানগুলো": "পরিমাণগুলো",
         "পরিমানটা": "পরিমাণটা",
         "পরিমানটি": "পরিমাণটি",
+        "পরিনাম": "পরিণাম",
+        "পরিনামে": "পরিণামে",
+        "পরিনামের": "পরিণামের",
         "প্রমান": "প্রমাণ",
         "প্রমানিত": "প্রমাণিত",
         "গ্রহন": "গ্রহণ",
@@ -633,11 +639,11 @@ class OfflineSpellChecker:
                 rank = self.word_rank.get(cand, 999999)
                 scored.append((1, rank, cand))
 
-        # 4. Check relaxed phonetic index (aspirate normalization & ba-phala folding, Edit distance <= 2)
+        # 4. Check relaxed phonetic index (aspirate normalization & ba-phala folding, Edit distance <= 1)
         if not scored:
             s_rkey = relaxed_phonetic_key(s)
             r_cands = self._relaxed_index.get(s_rkey, [])
-            max_d = 2 if len(s) >= 4 else 1
+            max_d = 1
             for cand in r_cands:
                 if cand == s or abs(len(cand) - len(s)) > max_d:
                     continue
@@ -762,11 +768,11 @@ class OfflineSpellChecker:
                 rank = self.word_rank.get(cand, 999999)
                 scored.append((1, rank, cand))
 
-        # 4. Whole-word relaxed phonetic match (aspirate normalization & ba-phala folding, Edit distance <= 2)
+        # 4. Whole-word relaxed phonetic match (aspirate normalization & ba-phala folding, Edit distance <= 1)
         if not scored:
             s_rkey = relaxed_phonetic_key(w)
             r_cands = self._relaxed_index.get(s_rkey, [])
-            max_d = 2 if len(w) >= 4 else 1
+            max_d = 1
             for cand in r_cands:
                 if cand == w or abs(len(cand) - len(w)) > max_d:
                     continue
@@ -782,12 +788,80 @@ class OfflineSpellChecker:
 
     def correct_word(self, word: str) -> str:
         """Return a high-confidence corrected word if available; when in doubt, leave original word untouched."""
-        if self.is_valid_word(word):
+        if not word:
             return word
-        suggestions = self.suggest(word, max_suggestions=1)
-        if suggestions:
-            return suggestions[0]
-        # Leave unrecognized words untouched rather than forcing a false replacement
+
+        w = normalize_bangla_word(word)
+        if not w or not PURE_BANGLA_WORD_RE.match(w):
+            return word
+
+        # 1. Instant direct correction table check for exact word
+        if w in DIRECT_CORRECTIONS:
+            return DIRECT_CORRECTIONS[w]
+
+        # 2. Check if word is already completely valid
+        if self.is_valid_word(w):
+            return word
+
+        # 3. Morphological Stemming & Suffix direct correction
+        stem, suf = self.decompose_word(w)
+        if suf:
+            # If the stem is an explicit known misspelling
+            if stem in DIRECT_CORRECTIONS:
+                return DIRECT_CORRECTIONS[stem] + suf
+            # Standard Bangla Academy -ী -> -ি rule for modern non-tatsama words
+            if stem.endswith("ী"):
+                cand_stem = stem[:-1] + "ি"
+                if self.is_root_valid(cand_stem):
+                    return cand_stem + suf
+            # If stem is already valid, preserve the original inflected word untouched
+            if self.is_root_valid(stem):
+                return word
+
+        # 4. Fallback check for alternate suffixes in INFLECTION_SUFFIXES
+        for alt_suf in INFLECTION_SUFFIXES:
+            if w.endswith(alt_suf) and len(w) - len(alt_suf) >= 2:
+                short_stem = w[:-len(alt_suf)]
+                if short_stem in DIRECT_CORRECTIONS:
+                    return DIRECT_CORRECTIONS[short_stem] + alt_suf
+                if short_stem.endswith("ী"):
+                    cand_stem = short_stem[:-1] + "ি"
+                    if self.is_root_valid(cand_stem):
+                        return cand_stem + alt_suf
+                if self.is_root_valid(short_stem):
+                    return word
+
+        # 5. Whole-word standard Bangla Academy -ী -> -ি rule
+        if w.endswith("ী"):
+            cand = w[:-1] + "ি"
+            if self.is_root_valid(cand):
+                return cand
+
+        # 6. Conservative Single-Character Orthographic Typo Check:
+        # ONLY apply if the candidate has the EXACT same consonant skeleton (phonetic_key),
+        # Levenshtein distance is strictly 1, word length >= 4,
+        # AND candidate is a very frequent dictionary root (rank < 50000).
+        # We NEVER use relaxed_phonetic_key or distance >= 2 for auto-replacement!
+        pkey = phonetic_key(w)
+        candidates = self._phonetic_index.get(pkey, [])
+        best_cand = None
+        best_rank = 999999
+        if len(w) >= 4:
+            for cand in candidates:
+                if cand == w or abs(len(cand) - len(w)) > 1:
+                    continue
+                if levenshtein_distance(w, cand, max_dist=1) == 1:
+                    rank = self.word_rank.get(cand, 999999)
+                    if rank < 50000 and rank < best_rank:
+                        if w[0] == cand[0] and (w[-1] == cand[-1] or w[-1] in "িীুূেোা"):
+                            best_rank = rank
+                            best_cand = cand
+
+        if best_cand:
+            return best_cand
+
+        # 7. For any other unrecognized word (proper names, unlisted vocabulary, neologisms):
+        # NEVER force an arbitrary false replacement! Leave untouched.
         return word
 
     def get_unrecognized_words(self, text: str) -> List[str]:

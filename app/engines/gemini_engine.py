@@ -180,7 +180,7 @@ def preserve_line_structure(original: str, corrected: str) -> str:
 class GeminiProofreaderEngine:
     """AI Assisted proofreading engine using Google Gemini API with ultra-fast Flash models."""
 
-    def __init__(self, api_key: Optional[str] = None, model_name: str = "gemini-3.5-flash-lite"):
+    def __init__(self, api_key: Optional[str] = None, model_name: str = "gemini-2.5-flash"):
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY", "")
         self.model_name = model_name
         self.client = None
@@ -260,13 +260,15 @@ class GeminiProofreaderEngine:
         geo_ref = get_geo_reference_for_text(text)
         wrapped_payload = f"<text_to_proofread>\n{text}\n</text_to_proofread>{geo_ref}"
 
+        user_model = self.model_name
+        if user_model in ("gemini-3.5-flash-lite", "gemini-flash-lite-latest", "gemini-3.1-flash-lite", "gemini-3.5-flash", "gemini-flash-latest", "gemini-3.8-flash", None):
+            user_model = "gemini-2.5-flash"
+
         models_to_try = list(dict.fromkeys([
-            self.model_name or "gemini-3.5-flash-lite",
-            "gemini-3.5-flash-lite",
-            "gemini-flash-lite-latest",
-            "gemini-3.1-flash-lite",
-            "gemini-3.5-flash",
-            "gemini-flash-latest",
+            user_model,
+            "gemini-2.5-flash",
+            "gemini-2.0-flash",
+            "gemini-1.5-flash",
         ]))
         last_error = None
         quota_or_auth_error = None
@@ -282,9 +284,13 @@ class GeminiProofreaderEngine:
                     thinking_cfg = None
                     if hasattr(genai_types, "ThinkingConfig"):
                         try:
-                            thinking_cfg = genai_types.ThinkingConfig(thinking_level="MINIMAL")
+                            # thinking_budget=0 turns off reasoning tokens for instant low-latency response
+                            thinking_cfg = genai_types.ThinkingConfig(thinking_budget=0)
                         except Exception:
-                            thinking_cfg = None
+                            try:
+                                thinking_cfg = genai_types.ThinkingConfig(thinking_level="MINIMAL")
+                            except Exception:
+                                thinking_cfg = None
 
                     config = genai_types.GenerateContentConfig(
                         system_instruction=BANGLA_PROOFREAD_SYSTEM_PROMPT,

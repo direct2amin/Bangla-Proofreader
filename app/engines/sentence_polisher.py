@@ -94,14 +94,15 @@ class SentencePolisher:
         if not self.client:
             raise RuntimeError("Gemini API Key is not configured. Please enter your API key in Settings.")
 
-        model_name = config.get("gemini_model", "gemini-3.5-flash-lite")
+        model_name = config.get("gemini_model", "gemini-2.5-flash")
+        if model_name in ("gemini-3.5-flash-lite", "gemini-flash-lite-latest", "gemini-3.1-flash-lite", "gemini-3.5-flash", "gemini-flash-latest", "gemini-3.8-flash", None):
+            model_name = "gemini-2.5-flash"
+
         candidate_models = list(dict.fromkeys([
-            model_name or "gemini-3.5-flash-lite",
-            "gemini-3.5-flash-lite",
-            "gemini-flash-lite-latest",
-            "gemini-3.1-flash-lite",
-            "gemini-3.5-flash",
-            "gemini-flash-latest",
+            model_name,
+            "gemini-2.5-flash",
+            "gemini-2.0-flash",
+            "gemini-1.5-flash",
         ]))
 
         prompt = (
@@ -113,9 +114,20 @@ class SentencePolisher:
         quota_or_auth_error = None
         for cand_model in candidate_models:
             try:
+                thinking_cfg = None
+                if genai_types and hasattr(genai_types, "ThinkingConfig"):
+                    try:
+                        thinking_cfg = genai_types.ThinkingConfig(thinking_budget=0)
+                    except Exception:
+                        try:
+                            thinking_cfg = genai_types.ThinkingConfig(thinking_level="MINIMAL")
+                        except Exception:
+                            thinking_cfg = None
+
                 gen_config = genai_types.GenerateContentConfig(
                     system_instruction=SENTENCE_POLISH_SYSTEM_PROMPT,
                     temperature=0.3,
+                    thinking_config=thinking_cfg,
                     response_mime_type="application/json",
                 )
                 response = self.client.models.generate_content(

@@ -1026,13 +1026,13 @@ class DiffWindow(QMainWindow):
 
         # Sequence Guardrail check:
         if not self.spelling_checked:
-            msg_box = QMessageBox(self)
-            msg_box.setIcon(QMessageBox.Icon.Warning)
-            msg_box.setWindowTitle(t("guardrail_title", self.lang))
-            msg_box.setText(t("guardrail_msg", self.lang))
-            ok_btn = msg_box.addButton(t("guardrail_ok", self.lang), QMessageBox.ButtonRole.AcceptRole)
-            msg_box.setDefaultButton(ok_btn)
-            msg_box.exec()
+            show_themed_message_box(
+                self,
+                "warning",
+                t("guardrail_title", self.lang),
+                t("guardrail_msg", self.lang),
+                effective_theme=self.effective_theme,
+            )
             return
 
         # Sentence Polish requires Online AI mode and internet

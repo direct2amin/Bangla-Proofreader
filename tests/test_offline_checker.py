@@ -150,6 +150,39 @@ class TestOfflineCheckerAndModeSwitcher(unittest.TestCase):
         self.assertTrue(self.checker.is_valid_word("রুজির"))
         self.assertEqual(self.checker.correct_word("রুজির"), "রুজির")
 
+    def test_unrecognized_words_never_falsely_replaced(self):
+        """Verify that unrecognized proper names, cultural or novel Bengali words are NEVER replaced with false dictionary words."""
+        test_words = [
+            "শাকেরের", "মুফাসসিরিন", "আব্দুল্লাহ", "হাওলাদার", "চাকলাদার",
+            "তানভীর", "রুজির", "খুতবায়", "মোসাদ্দেক", "তাহমিনা"
+        ]
+        for w in test_words:
+            # Word must be preserved untouched by correct_word
+            self.assertEqual(
+                self.checker.correct_word(w), w,
+                f"Word '{w}' was falsely converted to '{self.checker.correct_word(w)}'"
+            )
+
+    def test_window_titles_never_contain_bengali(self):
+        """Verify all window and dialog titles in both English and Bangla locales contain zero Bengali characters."""
+        import re
+        from app.utils.i18n import MESSAGES
+        bangla_re = re.compile(r"[\u0980-\u09FF]")
+
+        for lang in ("en", "bn"):
+            for key, val in MESSAGES[lang].items():
+                if key.endswith("_title") and isinstance(val, str):
+                    self.assertIsNone(
+                        bangla_re.search(val),
+                        f"Title key '{key}' in locale '{lang}' has Bengali characters: '{val}'"
+                    )
+
+    def test_gemini_models_list_and_fast_defaults(self):
+        """Verify Gemini engine uses official fast models and does not use non-existent models."""
+        from app.engines.gemini_engine import GeminiProofreaderEngine
+        engine = GeminiProofreaderEngine(api_key="test-key")
+        self.assertEqual(engine.model_name, "gemini-2.5-flash")
+
     def test_progress_bar_in_status_bar_not_toolbar(self):
         """Verify progress bar and label are placed in bottom status bar, avoiding toolbar collision."""
         window = DiffWindow()

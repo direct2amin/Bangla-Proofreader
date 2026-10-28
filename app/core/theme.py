@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import sys
 from typing import Dict, Any
 
@@ -1340,8 +1341,21 @@ def show_themed_message_box(
     except ImportError:
         from PySide6.QtWidgets import QMessageBox
 
+    # Ensure window title NEVER contains Bengali characters to prevent broken font rendering in Windows titlebars
+    clean_title = (title or "").strip()
+    if clean_title and re.search(r'[\u0980-\u09FF]', clean_title):
+        fallback_titles = {
+            "question": "Confirmation",
+            "warning": "Warning",
+            "critical": "Error",
+            "information": "Notice",
+        }
+        clean_title = fallback_titles.get(kind.lower(), "Bangla Proofreader")
+    elif not clean_title:
+        clean_title = "Bangla Proofreader"
+
     msg_box = QMessageBox(parent)
-    msg_box.setWindowTitle(title)
+    msg_box.setWindowTitle(clean_title)
     msg_box.setText(text)
 
     if kind == "question":
