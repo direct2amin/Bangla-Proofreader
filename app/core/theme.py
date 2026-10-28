@@ -248,6 +248,23 @@ QTableWidget {{
     font-family: "{font_family}";
 }}
 
+QCheckBox::indicator, QTableWidget::indicator {{
+    width: 17px;
+    height: 17px;
+    border-radius: 4px;
+    border: 1.5px solid #475569;
+    background-color: #1e293b;
+}}
+
+QCheckBox::indicator:hover, QTableWidget::indicator:hover {{
+    border-color: #10b981;
+}}
+
+QCheckBox::indicator:checked, QTableWidget::indicator:checked {{
+    background-color: #10b981;
+    border-color: #10b981;
+}}
+
 QHeaderView::section {{
     background-color: #1e293b;
     font-weight: 600;
@@ -544,6 +561,23 @@ QTableWidget {{
     gridline-color: #f1f5f9;
     color: #0f172a;
     font-family: "{font_family}";
+}}
+
+QCheckBox::indicator, QTableWidget::indicator {{
+    width: 17px;
+    height: 17px;
+    border-radius: 4px;
+    border: 1.5px solid #94a3b8;
+    background-color: #ffffff;
+}}
+
+QCheckBox::indicator:hover, QTableWidget::indicator:hover {{
+    border-color: #0b663b;
+}}
+
+QCheckBox::indicator:checked, QTableWidget::indicator:checked {{
+    background-color: #0b663b;
+    border-color: #0b663b;
 }}
 
 QHeaderView::section {{

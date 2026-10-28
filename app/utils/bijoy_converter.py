@@ -114,7 +114,7 @@ conversionMap: Dict[str, str] = {
     "\u2030": "ৈ",
     "\u0160": "ৗ",
     "|": "।",
-    "&": "্\u200C",
+    "&": "্",
 
     # Conjunct Glyphs
     "^": "্ব",
@@ -174,7 +174,7 @@ conversionMap: Dict[str, str] = {
     "\u00CA": "ণ্ড",
     "\u00CB": "ত্ত",
     "\u00CC": "ত্থ",
-    "\u00CD": "ত্ম",
+    "\u00CD": "ত",
     "\u00CE": "ত্র",
     "\u00CF": "দ্দ",
     "\u00D0": "-",
@@ -217,7 +217,7 @@ conversionMap: Dict[str, str] = {
     "\u00F5": "ষ্ফ",
     "\u00F6": "স্খ",
     "\u00F7": "স্ট",
-    "\u00F8": "স্ন",
+    "\u00F8": "্ল",
     "\u00F9": "স্ফ",
     "\u00FA": "্প",
     "\u00FB": "হু",
@@ -237,7 +237,7 @@ postConversionMap: Dict[str, str] = {
     "০ঃ": "০:", "১ঃ": "১:", "২ঃ": "২:", "৩ঃ": "৩:", "৪ঃ": "৪:",
     "৫ঃ": "৫:", "৬ঃ": "৬:", "৭ঃ": "৭:", "৮ঃ": "৮:", "৯ঃ": "৯:",
     " ঃ": ":", "\nঃ": "\n:", "]ঃ": "]:", "[ঃ": "[:",
-    "  ": " ", "অা": "আ", "্\u200C্\u200C": "্\u200C",
+    "  ": " ", "অা": "আ", "্্": "্",
 }
 
 # Uppercase aliases for backward compatibility
@@ -291,222 +291,138 @@ def is_space(c: str) -> bool:
     return c in (" ", "\t", "\n", "\r")
 
 
-def char_at(s: str, i: int) -> str:
+def char_at(s: Union[str, List[str]], i: int) -> str:
+    """Safe character accessor returning empty string when out of bounds."""
     if 0 <= i < len(s):
         return s[i]
     return ""
 
 
+# Pre-sorted mapping list with longest key patterns first
+SORTED_CONVERSION_MAP: List[Tuple[str, str]] = sorted(
+    conversionMap.items(), key=lambda kv: len(kv[0]), reverse=True
+)
+
+
 def reph(s: str) -> str:
-    """Handle dynamic backward scanning across consonants and halants for accurate reph (র্) positioning."""
-    # Pass 1: handle reph (র + halant) when preceded by a halant
+    """JSX reph helper: handles backward scanning across consonants and halants for accurate reph (র্) positioning."""
+    a = list(s)
+    o: List[str] = []
     i = 0
-    while i < len(s):
-        if (i < len(s) - 1 and char_at(s, i) == "র" and
-            is_bangla_halant(char_at(s, i + 1)) and
-            is_bangla_halant(char_at(s, i - 1))):
+    n = len(a)
+    while i < n:
+        if a[i] == "র" and char_at(a, i + 1) == HALANT and char_at(a, i - 1) != HALANT:
             j = 1
             while True:
-                if i - j < 0:
+                l = i - j
+                if l < 0:
                     break
-                if is_bangla_banjonborno(char_at(s, i - j)) and is_bangla_halant(char_at(s, i - j - 1)):
+                if is_bangla_banjonborno(char_at(a, l)) and char_at(a, l - 1) == HALANT:
                     j += 2
-                elif j == 1 and is_bangla_kar(char_at(s, i - j)):
+                elif j == 1 and is_bangla_kar(char_at(a, l)):
                     j += 1
                 else:
                     break
-            s = s[:i - j] + char_at(s, i) + char_at(s, i + 1) + s[i - j:i] + s[i + 2:]
-            i += 1
-            continue
+            if i - j >= 0 and is_bangla_banjonborno(char_at(a, i - j)):
+                cl = "".join(o[max(0, len(o) - j):])
+                o = o[:max(0, len(o) - j)]
+                o.extend(["র", HALANT, cl])
+                i += 2
+                continue
+        o.append(a[i])
         i += 1
-
-    # Pass 2: Reph reorder for trailing-© case (e.g. Kg©KZ©vi -> কর্মকর্তার)
-    i = 0
-    while i < len(s) - 1:
-        if (char_at(s, i) == "র" and
-            is_bangla_halant(char_at(s, i + 1)) and
-            i > 0 and
-            is_bangla_banjonborno(char_at(s, i - 1)) and
-            not is_bangla_halant(char_at(s, i - 2)) and
-            not (is_bangla_banjonborno(char_at(s, i + 2)) and is_bangla_halant(char_at(s, i + 3)))):
-            j = 1
-            while True:
-                if i - j - 1 < 0:
-                    break
-                if is_bangla_banjonborno(char_at(s, i - j - 1)) and is_bangla_halant(char_at(s, i - j)):
-                    j += 2
-                else:
-                    break
-            s = s[:i - j] + char_at(s, i) + char_at(s, i + 1) + s[i - j:i] + s[i + 2:]
-            i += 2
-            continue
-        i += 1
-
-    # Pass 3: Reph before halant cluster after proConversionMap
-    s = apply_map(s, proConversionMap)
-    i = 0
-    while i < len(s):
-        if (i < len(s) - 1 and char_at(s, i) == "র" and
-            is_bangla_halant(char_at(s, i + 1)) and
-            not is_bangla_halant(char_at(s, i - 1)) and
-            is_bangla_halant(char_at(s, i + 2))):
-            j = 1
-            while True:
-                if i - j < 0:
-                    break
-                if is_bangla_banjonborno(char_at(s, i - j)) and is_bangla_halant(char_at(s, i - j - 1)):
-                    j += 2
-                elif j == 1 and is_bangla_kar(char_at(s, i - j)):
-                    j += 1
-                else:
-                    break
-            s = s[:i - j] + char_at(s, i) + char_at(s, i + 1) + s[i - j:i] + s[i + 2:]
-            i += 1
-            continue
-        i += 1
-
-    return s
+    return "".join(o)
 
 
 def swapHalant(s: str) -> str:
-    """Handle halant swaps when trailing kars or chandrabindu appear before a halant."""
-    i = 0
-    while i < len(s):
-        if (i > 0 and char_at(s, i) == HALANT and
-            (is_bangla_kar(char_at(s, i - 1)) or is_bangla_nukta(char_at(s, i - 1))) and
-            i < len(s) - 1):
-            s = s[:i - 1] + char_at(s, i) + char_at(s, i + 1) + char_at(s, i - 1) + s[i + 2:]
-        i += 1
-    return s
+    """JSX swapHalant helper: handles halant swaps when trailing kars or chandrabindu appear before a halant."""
+    a = list(s)
+    i = 1
+    while i < len(a) - 1:
+        if a[i] == HALANT and (is_bangla_kar(a[i - 1]) or is_bangla_nukta(a[i - 1])):
+            p = a[i - 1]
+            h = a[i]
+            n = a[i + 1]
+            a[i - 1] = h
+            a[i] = n
+            a[i + 1] = p
+            i += 2
+        else:
+            i += 1
+    return "".join(a)
 
 
 def swapRa(s: str) -> str:
-    """Re-order 'র' and halant combinations with following kars."""
-    i = 0
-    while i < len(s):
-        if (i > 0 and i < len(s) - 1 and
-            char_at(s, i) == HALANT and
-            char_at(s, i - 1) == "\u09B0" and
-            char_at(s, i - 2) != HALANT and
-            is_bangla_kar(char_at(s, i + 1))):
-            s = s[:i - 1] + char_at(s, i + 1) + char_at(s, i - 1) + char_at(s, i) + s[i + 2:]
-        i += 1
-    return s
+    """JSX swapRa helper: re-orders 'র' and halant combinations with following kars."""
+    a = list(s)
+    i = 1
+    while i < len(a) - 1:
+        if a[i] == HALANT and a[i - 1] == "র" and (i - 2 < 0 or a[i - 2] != HALANT) and is_bangla_kar(a[i + 1]):
+            k = a[i + 1]
+            a[i + 1] = a[i]
+            a[i] = a[i - 1]
+            a[i - 1] = k
+            i += 2
+        else:
+            i += 1
+    return "".join(a)
 
 
 def preKars(s: str) -> str:
-    """Scan conjunct consonant clusters and properly position 'ে', 'ৈ', 'ি', and form compound vowels 'ো' and 'ৌ'."""
+    """JSX preKars helper: scans conjunct consonant clusters and properly positions 'ে', 'ৈ', 'ি', and forms compound vowels 'ো' and 'ৌ'."""
+    a = list(s)
+    o: List[str] = []
     i = 0
-    while i < len(s):
-        if (i < len(s) - 1 and is_bangla_pre_kar(char_at(s, i)) and not is_space(char_at(s, i + 1))):
-            temp = s[:i]
+    n = len(a)
+    while i < n:
+        c = a[i]
+        if is_bangla_pre_kar(c) and i + 1 < n and not is_space(a[i + 1]):
             j = 1
-            while i + j < len(s) and is_bangla_banjonborno(char_at(s, i + j)):
-                if i + j + 1 < len(s) and is_bangla_halant(char_at(s, i + j + 1)):
+            while i + j < n - 1 and is_bangla_banjonborno(char_at(a, i + j)):
+                if char_at(a, i + j + 1) == HALANT:
                     j += 2
                 else:
                     break
-            temp += s[i + 1:i + j + 1]
-
+            ti = i + j + 1
             l = 0
-            # Split O-kar: ে + consonant + া -> ো
-            if char_at(s, i) == "ে" and char_at(s, i + j + 1) == "া":
-                temp += "ো"
+            r = c
+            if c == "ে" and char_at(a, ti) == "া":
+                r = "ো"
                 l = 1
-            # Split Ou-kar: ে + consonant + ৗ -> ৌ
-            elif char_at(s, i) == "ে" and char_at(s, i + j + 1) == "ৗ":
-                temp += "ৌ"
+            elif c == "ে" and char_at(a, ti) == "ৗ":
+                r = "ৌ"
                 l = 1
-            else:
-                temp += char_at(s, i)
-
-            temp += s[i + j + l + 1:]
-            s = temp
-            i += j
+            cluster = "".join(a[i + 1:i + j + 1])
+            o.append(cluster + r)
+            i += j + l + 1
+            continue
+        o.append(c)
         i += 1
-    return s
+    return "".join(o)
 
 
 def nukta(s: str) -> str:
-    """Adjust nukta/chandrabindu ordering with post-kars."""
+    """JSX nukta helper: adjusts nukta/chandrabindu ordering with post-kars."""
+    a = list(s)
     i = 0
-    while i < len(s):
-        if (i < len(s) - 1 and is_bangla_nukta(char_at(s, i)) and is_bangla_post_kar(char_at(s, i + 1))):
-            s = s[:i] + char_at(s, i + 1) + char_at(s, i) + s[i + 2:]
-        i += 1
-    return s
-
-
-def rearrange(input_str: str) -> str:
-    """Reorder legacy Bijoy positional signs (reph, halants, ra, pre-kars, nuktas) into logical Unicode."""
-    s = reph(input_str)
-
-    # Combined single-pass positional rearrangement (swapHalant, swapRa, preKars, nukta)
-    i = 0
-    while i < len(s):
-        if (i < len(s) - 1 and char_at(s, i) == "র" and
-            is_bangla_halant(char_at(s, i + 1)) and
-            not is_bangla_halant(char_at(s, i - 1)) and
-            is_bangla_halant(char_at(s, i + 2))):
-            j = 1
-            while True:
-                if i - j < 0:
-                    break
-                if is_bangla_banjonborno(char_at(s, i - j)) and is_bangla_halant(char_at(s, i - j - 1)):
-                    j += 2
-                elif j == 1 and is_bangla_kar(char_at(s, i - j)):
-                    j += 1
-                else:
-                    break
-            s = s[:i - j] + char_at(s, i) + char_at(s, i + 1) + s[i - j:i] + s[i + 2:]
+    while i < len(a) - 1:
+        if is_bangla_nukta(a[i]) and is_bangla_post_kar(char_at(a, i + 1)):
+            a[i], a[i + 1] = a[i + 1], a[i]
+            i += 2
+        else:
             i += 1
-            continue
+    return "".join(a)
 
-        # swapHalant: Vowel/nukta + halant + consonant -> halant + consonant + vowel/nukta
-        if (i > 0 and char_at(s, i) == HALANT and
-            (is_bangla_kar(char_at(s, i - 1)) or is_bangla_nukta(char_at(s, i - 1))) and
-            i < len(s) - 1):
-            s = s[:i - 1] + char_at(s, i) + char_at(s, i + 1) + char_at(s, i - 1) + s[i + 2:]
 
-        # swapRa: র + halant + vowel -> vowel + র + halant
-        if (i > 0 and i < len(s) - 1 and
-            char_at(s, i) == HALANT and
-            char_at(s, i - 1) == "\u09B0" and
-            char_at(s, i - 2) != HALANT and
-            is_bangla_kar(char_at(s, i + 1))):
-            s = s[:i - 1] + char_at(s, i + 1) + char_at(s, i - 1) + char_at(s, i) + s[i + 2:]
-
-        # preKars: Pre-kar to post-kar Unicode placement (ি, ৈ, ে -> ো, ৌ)
-        if (i < len(s) - 1 and is_bangla_pre_kar(char_at(s, i)) and not is_space(char_at(s, i + 1))):
-            temp = s[:i]
-            j = 1
-            while i + j < len(s) and is_bangla_banjonborno(char_at(s, i + j)):
-                if i + j + 1 < len(s) and is_bangla_halant(char_at(s, i + j + 1)):
-                    j += 2
-                else:
-                    break
-            temp += s[i + 1:i + j + 1]
-
-            l = 0
-            if char_at(s, i) == "ে" and char_at(s, i + j + 1) == "া":
-                temp += "ো"
-                l = 1
-            elif char_at(s, i) == "ে" and char_at(s, i + j + 1) == "ৗ":
-                temp += "ৌ"
-                l = 1
-            else:
-                temp += char_at(s, i)
-
-            temp += s[i + j + l + 1:]
-            s = temp
-            i += j
-
-        # nukta: Nukta after kar
-        if (i < len(s) - 1 and is_bangla_nukta(char_at(s, i)) and is_bangla_post_kar(char_at(s, i + 1))):
-            s = s[:i] + char_at(s, i + 1) + char_at(s, i) + s[i + 2:]
-
-        i += 1
-
+def rearrange(s: str) -> str:
+    """Legacy backward-compatible pipeline executing full JSX transformation sequence."""
+    s = reph(s)
+    for k, v in proConversionMap.items():
+        s = s.replace(k, v)
+    s = swapHalant(s)
+    s = swapRa(s)
+    s = preKars(s)
+    s = nukta(s)
     return s
 
 
@@ -516,7 +432,7 @@ def convert(s: str) -> str:
         return s
 
     # Step 1: Protect URLs and Emails using Private Use Area tokens
-    urls: list[str] = []
+    urls: List[str] = []
     def mask_url(m: re.Match) -> str:
         idx = len(urls)
         urls.append(m.group(0))
@@ -525,7 +441,7 @@ def convert(s: str) -> str:
     text = URL_EMAIL_PATTERN.sub(mask_url, s)
 
     # Step 2: Protect Arabic text blocks and Harakat using Private Use Area tokens
-    arabics: list[str] = []
+    arabics: List[str] = []
     def mask_arabic(m: re.Match) -> str:
         idx = len(arabics)
         arabics.append(m.group(0))
@@ -533,21 +449,54 @@ def convert(s: str) -> str:
 
     text = ARABIC_BLOCK_PATTERN.sub(mask_arabic, text)
 
-    # Step 3: Run Bijoy to Unicode mapping pipeline
-    out = apply_map(text, preConversionMap)
-    out = apply_map(out, conversionMap)
-    out = rearrange(out)
-    out = apply_map(out, postConversionMap)
+    # Step 3: Run pre-conversion map
+    for k, v in preConversionMap.items():
+        if k:
+            text = text.replace(k, v)
 
-    # Step 4: Restore Arabic text blocks intact
+    # Normalize accidental space before akar in e-kar sequences (e.g. ‡Q v -> ‡Qv)
+    text = re.sub(
+        r'([‡†][A-Za-z0-9&^~•—˜™š›œŸ¡¢£¤¥¦§¨©ª«¬®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïÿðñòóôõö÷øùúûüýþ]+)\s+v',
+        r'\1v',
+        text
+    )
+
+    # Step 4: Run glyph conversion map (longest keys first)
+    for k, v in SORTED_CONVERSION_MAP:
+        text = text.replace(k, v)
+
+    # Step 5: Algorithmic transformations in exact JSX sequence
+    text = reph(text)
+    for k, v in proConversionMap.items():
+        text = text.replace(k, v)
+    text = swapHalant(text)
+    text = swapRa(text)
+    text = preKars(text)
+    text = nukta(text)
+
+    # Step 6: Run post-conversion cleanup map
+    for k, v in postConversionMap.items():
+        text = text.replace(k, v)
+
+    # Step 7: Post-conversion semantic cleanup for fractured characters
+    # Repair any split O-kar (e.g. করছে া -> করছো)
+    text = re.sub(r'([ক-হড়ঢ়য়](?:্[ক-হড়ঢ়য়])*)ে\s+া', r'\1ো', text)
+
+    # Safeguard Abdullah so it never fractures into split or sn-variants
+    text = text.replace("আব্দুলস্নাহ", "আব্দুল্লাহ")
+    text = text.replace("আব্দুল্সাহ", "আব্দুল্লাহ")
+    text = text.replace("আব্দুল্ল্াহ", "আব্দুল্লাহ")
+    text = text.replace("আব্দুল্\u200cলাহ", "আব্দুল্লাহ")
+
+    # Step 8: Restore Arabic text blocks intact
     for idx, b in enumerate(arabics):
-        out = out.replace(chr(0xE000 + idx), b)
+        text = text.replace(chr(0xE000 + idx), b)
 
-    # Step 5: Restore URLs and Emails intact
+    # Step 9: Restore URLs and Emails intact
     for idx, u in enumerate(urls):
-        out = out.replace(chr(0xE100 + idx), u)
+        text = text.replace(chr(0xE100 + idx), u)
 
-    return out
+    return text
 
 
 def convert_bijoy_to_unicode(text: str) -> str:

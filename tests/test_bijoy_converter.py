@@ -122,6 +122,13 @@ class TestBijoyConverter(unittest.TestCase):
         self.assertEqual(nukta("ঁা"), "াঁ")
         self.assertEqual(convert("Avgvi †mvbvi evsjv"), "আমার সোনার বাংলা")
 
+    def test_abdullah_and_korcho_unbroken_conversion(self):
+        """Verify Abdullah and Korcho convert cleanly without fractured or disjoint glyphs."""
+        self.assertEqual(convert_bijoy_to_unicode("Avãyjøvn"), "আব্দুল্লাহ")
+        self.assertEqual(convert_bijoy_to_unicode("Avãyj&jvn"), "আব্দুল্লাহ")
+        self.assertEqual(convert_bijoy_to_unicode("Ki‡Qv"), "করছো")
+        self.assertEqual(convert_bijoy_to_unicode("Ki‡Q v"), "করছো")
+
 
 if __name__ == '__main__':
     unittest.main()

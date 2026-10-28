@@ -437,10 +437,18 @@ class DiffWindow(QMainWindow):
         self.changes_table.setFont(bangla_font)
         self.changes_table.horizontalHeader().setFont(QFont(BANGLA_FONT, max(10, self.editor_font_size - 1)))
         self.changes_table.verticalHeader().setDefaultSectionSize(max(30, int(self.editor_font_size * 2.3)))
-        self.changes_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
-        self.changes_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        self.changes_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
-        self.changes_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
+        self.changes_table.setWordWrap(True)
+        self.changes_table.setTextElideMode(Qt.TextElideMode.ElideNone)
+        c_hdr = self.changes_table.horizontalHeader()
+        c_hdr.setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
+        self.changes_table.setColumnWidth(0, 55)
+        c_hdr.setSectionResizeMode(1, QHeaderView.ResizeMode.Interactive)
+        self.changes_table.setColumnWidth(1, 160)
+        c_hdr.setSectionResizeMode(2, QHeaderView.ResizeMode.Interactive)
+        self.changes_table.setColumnWidth(2, 160)
+        c_hdr.setSectionResizeMode(3, QHeaderView.ResizeMode.Interactive)
+        self.changes_table.setColumnWidth(3, 140)
+        c_hdr.setStretchLastSection(True)
         table_layout.addWidget(self.changes_table)
 
         self.tabs.addTab(table_widget, "")
@@ -470,12 +478,20 @@ class DiffWindow(QMainWindow):
         self.sentence_table = QTableWidget(0, 4)
         self.sentence_table.setFont(bangla_font)
         self.sentence_table.horizontalHeader().setFont(QFont(BANGLA_FONT, max(10, self.editor_font_size - 1)))
-        self.sentence_table.verticalHeader().setDefaultSectionSize(max(32, int(self.editor_font_size * 2.4)))
-        self.sentence_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
-        self.sentence_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        self.sentence_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
-        self.sentence_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
-        self.sentence_table.itemChanged.connect(self.on_sentence_checkbox_changed)
+        self.sentence_table.setWordWrap(True)
+        self.sentence_table.setTextElideMode(Qt.TextElideMode.ElideNone)
+        self.sentence_table.verticalHeader().setDefaultSectionSize(max(42, int(self.editor_font_size * 2.8)))
+        
+        s_hdr = self.sentence_table.horizontalHeader()
+        s_hdr.setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
+        self.sentence_table.setColumnWidth(0, 55)
+        s_hdr.setSectionResizeMode(1, QHeaderView.ResizeMode.Interactive)
+        self.sentence_table.setColumnWidth(1, 280)
+        s_hdr.setSectionResizeMode(2, QHeaderView.ResizeMode.Interactive)
+        self.sentence_table.setColumnWidth(2, 280)
+        s_hdr.setSectionResizeMode(3, QHeaderView.ResizeMode.Interactive)
+        self.sentence_table.setColumnWidth(3, 240)
+        s_hdr.setStretchLastSection(True)
         sentence_layout.addWidget(self.sentence_table)
 
         self.tabs.addTab(sentence_widget, "")
@@ -1090,29 +1106,39 @@ class DiffWindow(QMainWindow):
         for row_idx, change in enumerate(polish_result.changes):
             self.sentence_table.insertRow(row_idx)
 
-            chk_item = QTableWidgetItem()
-            chk_item.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
-            chk_item.setCheckState(Qt.CheckState.Checked)
-            chk_item.setData(Qt.ItemDataRole.UserRole, change.change_id)
-            self.sentence_table.setItem(row_idx, 0, chk_item)
+            # Centered proper modern QCheckBox widget
+            chk_widget = QWidget()
+            chk_layout = QHBoxLayout(chk_widget)
+            chk_layout.setContentsMargins(0, 0, 0, 0)
+            chk_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+            chk = QCheckBox()
+            chk.setChecked(change.change_id in self.accepted_sentence_ids)
+            chk.toggled.connect(lambda checked, cid=change.change_id: self.on_sentence_toggled(cid, checked))
+            chk_layout.addWidget(chk)
+            self.sentence_table.setCellWidget(row_idx, 0, chk_widget)
 
             orig_item = QTableWidgetItem(change.original)
             orig_item.setFont(bangla_font)
             orig_item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
             orig_item.setForeground(QBrush(orig_color))
+            orig_item.setToolTip(change.original)
             self.sentence_table.setItem(row_idx, 1, orig_item)
 
             pol_item = QTableWidgetItem(change.polished)
             pol_item.setFont(bangla_font)
             pol_item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
             pol_item.setForeground(QBrush(pol_color))
+            pol_item.setToolTip(change.polished)
             self.sentence_table.setItem(row_idx, 2, pol_item)
 
             reason_item = QTableWidgetItem(change.reason)
             reason_item.setFont(bangla_font)
             reason_item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
+            reason_item.setToolTip(change.reason)
             self.sentence_table.setItem(row_idx, 3, reason_item)
 
+        self.sentence_table.resizeRowsToContents()
         self.sentence_table.blockSignals(False)
 
     def render_inline_diff(self, orig: str, corr: str):
@@ -1122,12 +1148,8 @@ class DiffWindow(QMainWindow):
         self.accepted_change_ids = {c.change_id for c in diff_res.changes}
         self.refresh_views()
 
-    def on_sentence_checkbox_changed(self, item: QTableWidgetItem):
+    def on_sentence_toggled(self, change_id: int, is_checked: bool):
         """Handle toggling Keep/Reject checkbox in sentence polish table."""
-        if item.column() != 0 or not self.last_polish_result:
-            return
-        change_id = item.data(Qt.ItemDataRole.UserRole)
-        is_checked = (item.checkState() == Qt.CheckState.Checked)
         if is_checked:
             self.accepted_sentence_ids.add(change_id)
         else:
@@ -1148,25 +1170,33 @@ class DiffWindow(QMainWindow):
 
     def accept_all_sentences(self):
         """Accept all sentence refinements."""
-        self.sentence_table.blockSignals(True)
+        if not self.last_polish_result:
+            return
+        self.accepted_sentence_ids = {c.change_id for c in self.last_polish_result.changes}
         for row in range(self.sentence_table.rowCount()):
-            item = self.sentence_table.item(row, 0)
-            if item:
-                item.setCheckState(Qt.CheckState.Checked)
-                cid = item.data(Qt.ItemDataRole.UserRole)
-                if cid is not None:
-                    self.accepted_sentence_ids.add(cid)
-        self.sentence_table.blockSignals(False)
+            w = self.sentence_table.cellWidget(row, 0)
+            if w:
+                chk = w.findChild(QCheckBox)
+                if chk:
+                    chk.blockSignals(True)
+                    chk.setChecked(True)
+                    chk.blockSignals(False)
         self.apply_sentence_changes()
 
     def reject_all_sentences(self):
         """Reject all sentence refinements and revert to pre-polished text."""
-        self.sentence_table.blockSignals(True)
-        for row in range(self.sentence_table.rowCount()):
-            item = self.sentence_table.item(row, 0)
-            if item:
-                item.setCheckState(Qt.CheckState.Unchecked)
+        if not self.last_polish_result:
+            return
         self.accepted_sentence_ids.clear()
+        for row in range(self.sentence_table.rowCount()):
+            w = self.sentence_table.cellWidget(row, 0)
+            if w:
+                chk = w.findChild(QCheckBox)
+                if chk:
+                    chk.blockSignals(True)
+                    chk.setChecked(False)
+                    chk.blockSignals(False)
+        self.apply_sentence_changes()
         self.sentence_table.blockSignals(False)
         self.apply_sentence_changes()
 
