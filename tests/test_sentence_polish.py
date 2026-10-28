@@ -46,6 +46,27 @@ class TestSentencePolishAndTwoTierWorkflow(unittest.TestCase):
         self.assertIn("সারাজীবনের", result)
         self.assertIn("কারণ", result)
 
+    def test_offline_checker_corrects_muhurther_and_phonetic_aspirations(self):
+        """Verify 'মুহুর্থের' and aspirate confusion words are properly detected and corrected offline."""
+        passage = "একটি মুহুর্থের অসতর্কতা সারাজিবনের কান্নার কারন হতে পারে।"
+        result = self.checker.proofread_text(passage)
+        self.assertEqual(result, "একটি মুহূর্তের অসতর্কতা সারাজীবনের কান্নার কারণ হতে পারে।")
+
+        # Test various other forms of মুহূর্ত
+        self.assertEqual(self.checker.correct_word("মুহুর্থ"), "মুহূর্ত")
+        self.assertEqual(self.checker.correct_word("মুহুর্থে"), "মুহূর্তে")
+        self.assertEqual(self.checker.correct_word("মুহুর্থের"), "মুহূর্তের")
+        self.assertEqual(self.checker.correct_word("মূহুর্থের"), "মুহূর্তের")
+        self.assertEqual(self.checker.correct_word("মুহুর্তের"), "মুহূর্তের")
+
+        # Test aspirate and ba-phala words
+        self.assertEqual(self.checker.correct_word("উজ্জল"), "উজ্জ্বল")
+        self.assertEqual(self.checker.correct_word("উচ্ছাস"), "উচ্ছ্বাস")
+        self.assertEqual(self.checker.correct_word("সান্তনা"), "সান্ত্বনা")
+        self.assertEqual(self.checker.correct_word("দ্বন্দ"), "দ্বন্দ্ব")
+        self.assertEqual(self.checker.correct_word("কষ্ঠ"), "কষ্ট")
+        self.assertEqual(self.checker.correct_word("স্বার্তপর"), "স্বার্থপর")
+
     def test_sequence_guardrail_blocks_sentence_polish_before_spelling_check(self):
         """Verify clicking 'বাক্য পরিমার্জন' while spelling_checked is False blocks AI and shows warning."""
         engine_mgr = EngineManager(check_network_on_init=False)

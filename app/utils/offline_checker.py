@@ -127,18 +127,96 @@ DIRECT_CORRECTIONS: Dict[str, str] = {
         "কার্য্যালয়ে": "কার্যালয়ে",
         "ইতিমধ্যে": "ইতোমধ্যে",
         "সান্তনা": "সান্ত্বনা",
+        "সান্তনার": "সান্ত্বনার",
+        "সান্তনায়": "সান্ত্বনায়",
+        "সান্তনাতে": "সান্ত্বনাতে",
+        "উজ্জল": "উজ্জ্বল",
+        "উজ্জলে": "উজ্জ্বলে",
+        "উজ্জলের": "উজ্জ্বলের",
+        "উজ্জলতা": "উজ্জ্বলতা",
+        "উজ্জলভাবে": "উজ্জ্বলভাবে",
+        "উচ্ছাস": "উচ্ছ্বাস",
+        "উচ্ছাসে": "উচ্ছ্বাসে",
+        "উচ্ছাসের": "উচ্ছ্বাসের",
+        "উচ্ছাসিত": "উচ্ছ্বসিত",
+        "দ্বন্দ": "দ্বন্দ্ব",
+        "দ্বন্দে": "দ্বন্দ্বে",
+        "দ্বন্দের": "দ্বন্দ্বের",
+        "দ্বন্ধ": "দ্বন্দ্ব",
+        "দ্বন্ধে": "দ্বন্দ্বে",
+        "দ্বন্ধের": "দ্বন্দ্বের",
+        "কষ্ঠ": "কষ্ট",
+        "কষ্ঠের": "কষ্টের",
+        "কষ্ঠদায়ক": "কষ্টদায়ক",
+        "কষ্ঠকর": "কষ্টকর",
+        "স্বার্ত": "স্বার্থ",
+        "স্বার্তে": "স্বার্থে",
+        "স্বার্তের": "স্বার্থের",
+        "স্বার্তপর": "স্বার্থপর",
+        "স্বার্তপরতা": "স্বার্থপরতা",
+        "মিষ্ঠি": "মিষ্টি",
+        "মিষ্ঠির": "মিষ্টির",
+        "মিষ্ঠিতে": "মিষ্টিতে",
+        "সৃষ্ঠি": "সৃষ্টি",
+        "সৃষ্ঠির": "সৃষ্টির",
+        "সৃষ্ঠিতে": "সৃষ্টিতে",
+        "সৃষ্ঠিকর্তা": "সৃষ্টিকর্তা",
+        "দৃষ্ঠি": "দৃষ্টি",
+        "দৃষ্ঠির": "দৃষ্টির",
+        "দৃষ্ঠিতে": "দৃষ্টিতে",
+        "দৃষ্ঠিকোণ": "দৃষ্টিকোণ",
+        "দৃষ্ঠিগোচর": "দৃষ্টিগোচর",
+        "সন্তুষ্ঠ": "সন্তুষ্ট",
+        "তুষ্ঠ": "তুষ্ট",
+        "রুষ্ঠ": "রুষ্ট",
+        "শ্রেষ্ট": "শ্রেষ্ঠ",
+        "শ্রেষ্টত্ব": "শ্রেষ্ঠত্ব",
+        "জ্যৈষ্ট": "জ্যৈষ্ঠ",
+        "ঘনিষ্ট": "ঘনিষ্ঠ",
+        "ঘনিষ্টতা": "ঘনিষ্ঠতা",
+        "ঘনিষ্টভাবে": "ঘনিষ্ঠভাবে",
+        "কনিষ্ট": "কনিষ্ঠ",
+        "পৃষ্টা": "পৃষ্ঠা",
+        "পৃষ্টায়": "পৃষ্ঠায়",
+        "পৃষ্টার": "পৃষ্ঠার",
+        "নিষ্টা": "নিষ্ঠা",
+        "নিষ্টাবান": "নিষ্ঠাবান",
         "মুহুর্ত": "মুহূর্ত",
         "মুহুর্তে": "মুহূর্তে",
         "মুহুর্তের": "মুহূর্তের",
         "মুহুর্তেই": "মুহূর্তেই",
+        "মুহুর্তকে": "মুহূর্তকে",
+        "মুহুর্তগুলো": "মুহূর্তগুলো",
+        "মুহুর্তটা": "মুহূর্তটা",
+        "মুহুর্তটি": "মুহূর্তটি",
+        "মুহুর্থ": "মুহূর্ত",
+        "মুহুর্থে": "মুহূর্তে",
+        "মুহুর্থের": "মুহূর্তের",
+        "মুহুর্থেই": "মুহূর্তেই",
+        "মুহুর্থকে": "মুহূর্তকে",
+        "মুহুর্থগুলো": "মুহূর্তগুলো",
+        "মুহুর্থটা": "মুহূর্তটা",
+        "মুহুর্থটি": "মুহূর্তটি",
         "মূহুর্ত": "মুহূর্ত",
         "মূহুর্তে": "মুহূর্তে",
         "মূহুর্তের": "মুহূর্তের",
+        "মূহুর্তেই": "মুহূর্তেই",
+        "মূহুর্থ": "মুহূর্ত",
+        "মূহুর্থে": "মুহূর্তে",
+        "মূহুর্থের": "মুহূর্তের",
+        "মূহুর্থেই": "মুহূর্তেই",
+        "মুহূর্ত্থ": "মুহূর্ত",
         "মূর্হুত": "মুহূর্ত",
+        "মূর্হুতে": "মুহূর্তে",
+        "মূর্হুতের": "মুহূর্তের",
         "আশির্বাদ": "আশীর্বাদ",
         "আশির্বাদে": "আশীর্বাদে",
         "আশির্বাদের": "আশীর্বাদের",
         "আশির্বাদেই": "আশীর্বাদেই",
+        "আশির্বাদপুষ্ট": "আশীর্বাদপুষ্ট",
+        "আর্শিবাদ": "আশীর্বাদ",
+        "আর্শিবাদে": "আশীর্বাদে",
+        "আর্শিবাদের": "আশীর্বাদের",
         "নূন্যতম": "ন্যূনতম",
         "নূণ্যতম": "ন্যূনতম",
         "ন্যুনতম": "ন্যূনতম",
@@ -161,6 +239,55 @@ DIRECT_CORRECTIONS: Dict[str, str] = {
         "উদ্দ্যেশ্যে": "উদ্দেশ্যে",
         "কথপোকথন": "কথোপকথন",
         "দুরাবস্থা": "দুরবস্থা",
+        "দূরবস্থা": "দুরবস্থা",
+        "দূরাবস্থা": "দুরবস্থা",
+        "দূর্ঘটনার": "দুর্ঘটনার",
+        "দুরর্ঘটনা": "দুর্ঘটনা",
+        "দুরর্ঘটনায়": "দুর্ঘটনায়",
+        "শারিরীকভাবে": "শারীরিকভাবে",
+        "শারিরিকভাবে": "শারীরিকভাবে",
+        "শারীরীক": "শারীরিক",
+        "পিপিলিকা": "পিপীলিকা",
+        "পিপিলীকা": "পিপীলিকা",
+        "পিপীলীকা": "পিপীলিকা",
+        "মরিচিকা": "মরীচিকা",
+        "মরীচীকা": "মরীচিকা",
+        "সমিচিন": "সমীচীন",
+        "কৌতুহল": "কৌতূহল",
+        "কৌতুহলে": "কৌতূহলে",
+        "কৌতুহলী": "কৌতূহলী",
+        "কৌতুহলোদ্দীপক": "কৌতূহলোদ্দীপক",
+        "প্রতিকুল": "প্রতিকূল",
+        "প্রতিকুলে": "প্রতিকূলে",
+        "প্রতিকুলতা": "প্রতিকূলতা",
+        "অনুকুল": "অনুকূল",
+        "অনুকুলে": "অনুকূলে",
+        "মনপুত": "মনঃপূত",
+        "ইতিপূর্বে": "ইতঃপূর্বে",
+        "দুরত্ব": "দূরত্ব",
+        "দুরবর্তী": "দূরবর্তী",
+        "দুরদর্শী": "দূরদর্শী",
+        "দুরবীক্ষণ": "দূরবীক্ষণ",
+        "আইনজীবি": "আইনজীবী",
+        "বুদ্ধিজীবি": "বুদ্ধিজীবী",
+        "শ্রমজীবি": "শ্রমজীবী",
+        "পেশাজীবি": "পেশাজীবী",
+        "কৃষিজীবি": "কৃষিজীবী",
+        "মৎস্যজীবি": "মৎস্যজীবী",
+        "দায়ীত্ব": "দায়িত্ব",
+        "দায়ীত্বশীল": "দায়িত্বশীল",
+        "স্থায়ীত্ম": "স্থায়িত্ব",
+        "পোষাক": "পোশাক",
+        "মাষ্টার": "মাস্টার",
+        "পোষ্ট": "পোস্ট",
+        "পোষ্টের": "পোস্টের",
+        "পোষ্টে": "পোস্টে",
+        "পোষ্টাফিস": "পোস্টঅফিস",
+        "ষ্টেশন": "স্টেশন",
+        "ষ্টেশনের": "স্টেশনের",
+        "রেজিষ্ট্রেশন": "রেজিস্ট্রেশন",
+        "ইনষ্টিটিউট": "ইনস্টিটিউট",
+        "রেস্তোরা": "রেস্তোরাঁ",
         "নিরব": "নীরব",
         "নিরবতা": "নীরবতা",
         "নিরোগী": "নীরোগ",
@@ -267,10 +394,43 @@ STRICT_ORTHOGRAPHIC_TABLE = str.maketrans({
     "ৌ": "ো",
 })
 
+# Relaxed orthographic table: equates aspirate/unaspirated consonant pairs and ba-phala
+RELAXED_ORTHOGRAPHIC_TABLE = str.maketrans({
+    "ী": "ি",
+    "ূ": "ু",
+    "ণ": "ন",
+    "ষ": "শ",
+    "স": "শ",
+    "ড়": "র",
+    "ঢ়": "র",
+    "ৎ": "ত",
+    "ঙ": "ং",
+    "ৈ": "ে",
+    "ৌ": "ো",
+    "খ": "ক",
+    "ঘ": "গ",
+    "ছ": "চ",
+    "ঝ": "জ",
+    "ঠ": "ট",
+    "ঢ": "ড",
+    "থ": "ত",
+    "ধ": "দ",
+    "ফ": "প",
+    "ভ": "ব",
+    "য": "জ",
+})
+
 
 def phonetic_key(word: str) -> str:
     """Return a strictly orthographic-normalized skeleton of a Bengali word (preserves base consonants)."""
     s = word.translate(STRICT_ORTHOGRAPHIC_TABLE)
+    return s.replace("\u200c", "")
+
+
+def relaxed_phonetic_key(word: str) -> str:
+    """Return a relaxed phonetic skeleton equating aspirates and folding silent ba-phala."""
+    s = word.replace("\u09cd\u09ac", "")  # strip ba-phala (উজ্জ্বল -> উজ্জল, সান্ত্বনা -> সান্তনা)
+    s = s.translate(RELAXED_ORTHOGRAPHIC_TABLE)
     return s.replace("\u200c", "")
 
 
@@ -314,12 +474,14 @@ class OfflineSpellChecker:
     _shared_word_set: Optional[Set[str]] = None
     _shared_word_rank: Optional[Dict[str, int]] = None
     _shared_phonetic_index: Optional[Dict[str, List[str]]] = None
+    _shared_relaxed_index: Optional[Dict[str, List[str]]] = None
 
     def __init__(self, dict_path: Optional[str] = None):
         self.dict_path = dict_path or self._resolve_default_dict_path()
         self.word_set: Set[str] = set()
         self.word_rank: Dict[str, int] = {}
         self._phonetic_index: Dict[str, List[str]] = defaultdict(list)
+        self._relaxed_index: Dict[str, List[str]] = defaultdict(list)
         self._suggestion_cache: Dict[str, List[str]] = {}
         self._load_dictionary()
 
@@ -339,16 +501,19 @@ class OfflineSpellChecker:
             and OfflineSpellChecker._shared_word_set is not None
             and OfflineSpellChecker._shared_word_rank is not None
             and OfflineSpellChecker._shared_phonetic_index is not None
+            and OfflineSpellChecker._shared_relaxed_index is not None
         ):
             self.word_set = OfflineSpellChecker._shared_word_set
             self.word_rank = OfflineSpellChecker._shared_word_rank
             self._phonetic_index = OfflineSpellChecker._shared_phonetic_index
+            self._relaxed_index = OfflineSpellChecker._shared_relaxed_index
             return
 
         t0 = time.perf_counter()
         word_set: Set[str] = set(ISLAMIC_AND_CULTURAL_VOCAB)
         word_rank: Dict[str, int] = {w: idx for idx, w in enumerate(ISLAMIC_AND_CULTURAL_VOCAB)}
         phonetic_index: Dict[str, List[str]] = defaultdict(list)
+        relaxed_index: Dict[str, List[str]] = defaultdict(list)
 
         if os.path.exists(self.dict_path):
             with open(self.dict_path, "r", encoding="utf-8") as f:
@@ -364,6 +529,10 @@ class OfflineSpellChecker:
                     if w not in phonetic_index[pkey] and len(phonetic_index[pkey]) < 8:
                         phonetic_index[pkey].append(w)
 
+                    rkey = relaxed_phonetic_key(w)
+                    if w not in relaxed_index[rkey] and len(relaxed_index[rkey]) < 8:
+                        relaxed_index[rkey].append(w)
+
         elapsed_ms = (time.perf_counter() - t0) * 1000.0
         logger.info(
             "Loaded %d Bengali words into offline dictionary in %.1f ms from %s",
@@ -373,11 +542,13 @@ class OfflineSpellChecker:
         self.word_set = word_set
         self.word_rank = word_rank
         self._phonetic_index = phonetic_index
+        self._relaxed_index = relaxed_index
 
         if self.dict_path == default_path and word_set:
             OfflineSpellChecker._shared_word_set = word_set
             OfflineSpellChecker._shared_word_rank = word_rank
             OfflineSpellChecker._shared_phonetic_index = phonetic_index
+            OfflineSpellChecker._shared_relaxed_index = relaxed_index
 
     def is_root_valid(self, stem: str) -> bool:
         """Check if stem is present directly in the dictionary or cultural vocabulary."""
@@ -451,19 +622,32 @@ class OfflineSpellChecker:
             if self.is_root_valid(cand):
                 return [cand]
 
-        # 3. Check conservative orthographic index (Edit distance == 1 AND identical phonetic skeleton)
+        # 3. Check conservative orthographic index (Edit distance <= 1 AND identical phonetic skeleton)
         s_pkey = phonetic_key(s)
         candidates = self._phonetic_index.get(s_pkey, [])
-        scored: List[Tuple[int, str]] = []
+        scored: List[Tuple[int, int, str]] = []
         for cand in candidates:
-            if cand == s or len(cand) != len(s):
+            if cand == s or abs(len(cand) - len(s)) > 1:
                 continue
             if levenshtein_distance(s, cand, max_dist=1) == 1:
                 rank = self.word_rank.get(cand, 999999)
-                scored.append((rank, cand))
+                scored.append((1, rank, cand))
 
-        scored.sort(key=lambda item: item[0])
-        return [cand for _, cand in scored]
+        # 4. Check relaxed phonetic index (aspirate normalization & ba-phala folding, Edit distance <= 2)
+        if not scored:
+            s_rkey = relaxed_phonetic_key(s)
+            r_cands = self._relaxed_index.get(s_rkey, [])
+            max_d = 2 if len(s) >= 4 else 1
+            for cand in r_cands:
+                if cand == s or abs(len(cand) - len(s)) > max_d:
+                    continue
+                dist = levenshtein_distance(s, cand, max_dist=max_d)
+                if dist <= max_d:
+                    rank = self.word_rank.get(cand, 999999)
+                    scored.append((dist, rank, cand))
+
+        scored.sort(key=lambda item: (item[0], item[1]))
+        return [cand for _, _, cand in scored]
 
     def is_valid_word(self, word: str) -> bool:
         """O(1) membership check with Morphological Stemming & Suffix Handling (বিভক্তি/প্রত্যয়)."""
@@ -566,20 +750,33 @@ class OfflineSpellChecker:
                     self._suggestion_cache[w] = [corr]
                     return [corr]
 
-        # 3. Whole-word conservative orthographic match (Edit Distance == 1 AND identical phonetic skeleton)
+        # 3. Whole-word conservative orthographic match (Edit Distance <= 1 AND identical phonetic skeleton)
         pkey = phonetic_key(w)
         candidates = self._phonetic_index.get(pkey, [])
-        scored: List[Tuple[int, str]] = []
+        scored: List[Tuple[int, int, str]] = []
         for cand in candidates:
-            if cand == w or len(cand) != len(w):
+            if cand == w or abs(len(cand) - len(w)) > 1:
                 continue
             dist = levenshtein_distance(w, cand, max_dist=1)
             if dist == 1:
                 rank = self.word_rank.get(cand, 999999)
-                scored.append((rank, cand))
+                scored.append((1, rank, cand))
 
-        scored.sort(key=lambda item: item[0])
-        results: List[str] = [c for _, c in scored]
+        # 4. Whole-word relaxed phonetic match (aspirate normalization & ba-phala folding, Edit distance <= 2)
+        if not scored:
+            s_rkey = relaxed_phonetic_key(w)
+            r_cands = self._relaxed_index.get(s_rkey, [])
+            max_d = 2 if len(w) >= 4 else 1
+            for cand in r_cands:
+                if cand == w or abs(len(cand) - len(w)) > max_d:
+                    continue
+                dist = levenshtein_distance(w, cand, max_dist=max_d)
+                if dist <= max_d:
+                    rank = self.word_rank.get(cand, 999999)
+                    scored.append((dist, rank, cand))
+
+        scored.sort(key=lambda item: (item[0], item[1]))
+        results: List[str] = [c for _, _, c in scored]
         self._suggestion_cache[w] = results[:max_suggestions]
         return results[:max_suggestions]
 
