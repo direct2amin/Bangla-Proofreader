@@ -31,6 +31,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "gemini_api_key": os.environ.get("GEMINI_API_KEY", ""),
     "gemini_model": "gemini-3.5-flash-lite",
     "shortcut": "ctrl+alt+b",
+    "quick_convert_enabled": True,
     "auto_paste": True,
     "ui_language": "en",
     "minimize_to_tray_on_close": True,
@@ -74,6 +75,10 @@ def load_config() -> Dict[str, Any]:
     # Ensure model is updated to reliable high-capacity gemini-3.5-flash-lite if discontinued or rate-limited model is saved
     if config.get("gemini_model") in ("gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-3.8-flash", "gemini-3.5-flash", None):
         config["gemini_model"] = "gemini-3.5-flash-lite"
+
+    # Ensure main shortcut does not clash with dedicated quick-convert shortcut (Ctrl+Alt+C)
+    if config.get("shortcut", "").strip().lower() == "ctrl+alt+c":
+        config["shortcut"] = "ctrl+alt+b"
 
     # Environment variable priority if set
     env_key = os.environ.get("GEMINI_API_KEY", "").strip()

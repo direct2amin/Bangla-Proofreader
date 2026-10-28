@@ -556,7 +556,7 @@ class DiffWindow(QMainWindow):
             or load_config().get("shortcut", "ctrl+alt+b")
             or "ctrl+alt+b"
         ).strip().lower()
-        if raw_sc not in ("ctrl+alt+b", "ctrl+alt+z", "ctrl+alt+x", "ctrl+alt+c"):
+        if raw_sc not in ("ctrl+alt+b", "ctrl+alt+z", "ctrl+alt+x"):
             raw_sc = "ctrl+alt+b"
         sc_display = "+".join(part.capitalize() for part in raw_sc.split("+"))
         status_text = t("status_shortcut", self.lang).replace("Ctrl+Alt+B", sc_display)
@@ -1467,6 +1467,8 @@ class DiffWindow(QMainWindow):
 
             # Apply updated global shortcut if changed
             new_shortcut = (dlg.config.get("shortcut", "ctrl+alt+b") or "ctrl+alt+b").strip().lower()
+            if new_shortcut not in ("ctrl+alt+b", "ctrl+alt+z", "ctrl+alt+x"):
+                new_shortcut = "ctrl+alt+b"
             self.shortcut_changed.emit(new_shortcut)
             self.update_shortcut_status(new_shortcut)
 

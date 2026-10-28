@@ -237,11 +237,12 @@ class SettingsDialog(QDialog):
             ("Ctrl+Alt+B", "ctrl+alt+b"),
             ("Ctrl+Alt+Z", "ctrl+alt+z"),
             ("Ctrl+Alt+X", "ctrl+alt+x"),
-            ("Ctrl+Alt+C", "ctrl+alt+c"),
         ):
             self.shortcut_combo.addItem(label, value)
 
         current_sc = (self.config.get("shortcut", "ctrl+alt+b") or "ctrl+alt+b").strip().lower()
+        if current_sc not in ("ctrl+alt+b", "ctrl+alt+z", "ctrl+alt+x"):
+            current_sc = "ctrl+alt+b"
         sc_idx = self.shortcut_combo.findData(current_sc)
         if sc_idx != -1:
             self.shortcut_combo.setCurrentIndex(sc_idx)
@@ -251,6 +252,11 @@ class SettingsDialog(QDialog):
         sc_row.addWidget(sc_lbl)
         sc_row.addWidget(self.shortcut_combo)
         behavior_layout.addLayout(sc_row)
+
+        self.quick_convert_chk = QCheckBox(t("settings_quick_convert", self.lang))
+        self.quick_convert_chk.setChecked(self.config.get("quick_convert_enabled", True))
+        self.quick_convert_chk.setToolTip(t("settings_quick_convert_tip", self.lang))
+        behavior_layout.addWidget(self.quick_convert_chk)
 
         self.minimize_to_tray_chk = QCheckBox(t("settings_minimize_tray", self.lang))
         self.minimize_to_tray_chk.setChecked(self.config.get("minimize_to_tray_on_close", True))
@@ -309,7 +315,11 @@ class SettingsDialog(QDialog):
         self.config["theme"] = self.theme_combo.currentData()
         self.config["engine"] = "gemini"
         self.config["gemini_api_key"] = self.gemini_key_edit.text().strip()
-        self.config["shortcut"] = self.shortcut_combo.currentData()
+        sc = self.shortcut_combo.currentData()
+        if sc not in ("ctrl+alt+b", "ctrl+alt+z", "ctrl+alt+x"):
+            sc = "ctrl+alt+b"
+        self.config["shortcut"] = sc
+        self.config["quick_convert_enabled"] = self.quick_convert_chk.isChecked()
         self.config["minimize_to_tray_on_close"] = self.minimize_to_tray_chk.isChecked()
 
         start_with_win = self.start_with_windows_chk.isChecked()

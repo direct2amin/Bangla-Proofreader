@@ -157,6 +157,17 @@ class ClipboardManager:
         - Sends a single hardware-scanned Ctrl+V so Illustrator registers 1 single Undo step.
         """
         try:
+            release_modifier_keys()
+            if cls._last_target_hwnd:
+                try:
+                    user32 = ctypes.windll.user32
+                    curr_fg = user32.GetForegroundWindow()
+                    if curr_fg != cls._last_target_hwnd:
+                        user32.SetForegroundWindow(cls._last_target_hwnd)
+                        time.sleep(0.02)
+                except Exception:
+                    pass
+
             if set_clipboard and text:
                 cls.set_text(text)
                 time.sleep(0.05)

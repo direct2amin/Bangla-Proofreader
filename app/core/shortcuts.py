@@ -22,7 +22,8 @@ MOD_NOREPEAT = 0x4000
 
 WM_HOTKEY = 0x0312
 WM_QUIT = 0x0012
-HOTKEY_ID = 0xB001
+HOTKEY_ID_MAIN = 0xB001
+HOTKEY_ID_QUICK_CONVERT = 0xB002
 
 
 def parse_win32_shortcut(shortcut: str) -> Tuple[int, int]:
@@ -56,11 +57,14 @@ class ShortcutManager:
     Manages global Windows keyboard hotkeys with pause and resume capability.
     Uses native Win32 RegisterHotKey on a dedicated message-loop thread so Windows
     never silently drops the hook (unlike WH_KEYBOARD_LL in the keyboard library).
+    Supports both the primary Proofreader hotkey and an instant Quick Convert hotkey (Ctrl+Alt+C).
     """
 
     def __init__(self, default_shortcut: str = "ctrl+alt+b"):
         self.current_shortcut = default_shortcut
+        self.quick_convert_shortcut: Optional[str] = "ctrl+alt+c"
         self.callback: Optional[Callable[[], None]] = None
+        self.quick_convert_callback: Optional[Callable[[], None]] = None
         self._is_registered = False
         self._is_paused = False
         self._win32_thread: Optional[threading.Thread] = None
@@ -70,42 +74,58 @@ class ShortcutManager:
         self._win32_success = False
         self._using_keyboard_fallback = False
         self._last_trigger_time = 0.0
+        self._last_quick_trigger_time = 0.0
 
     @property
     def is_paused(self) -> bool:
         return self._is_paused
 
     def pause(self) -> None:
-        """Pause triggering hotkey without unregistering."""
+        """Pause triggering hotkeys without unregistering."""
         self._is_paused = True
-        logger.info("Global shortcut '%s' paused.", self.current_shortcut)
+        logger.info("Global shortcuts paused.")
 
     def resume(self) -> None:
-        """Resume triggering hotkey."""
+        """Resume triggering hotkeys."""
         self._is_paused = False
-        logger.info("Global shortcut '%s' resumed.", self.current_shortcut)
+        logger.info("Global shortcuts resumed.")
 
     def toggle_pause(self) -> bool:
         """Toggle pause state and return new paused state."""
         self._is_paused = not self._is_paused
-        logger.info("Global shortcut '%s' pause state toggled to: %s", self.current_shortcut, self._is_paused)
+        logger.info("Global shortcuts pause state toggled to: %s", self._is_paused)
         return self._is_paused
 
-    def _wrapper(self) -> None:
-        """Internal callback that only executes if not paused, with 250ms debounce."""
-        if self._is_paused or not self.callback:
+    def _handle_trigger(self, hotkey_id: int) -> None:
+        """Internal callback dispatcher with debouncing and pause check."""
+        if self._is_paused:
             return
         now = time.monotonic()
-        if now - self._last_trigger_time < 0.25:
-            return
-        self._last_trigger_time = now
-        try:
-            self.callback()
-        except Exception as e:
-            logger.error("Error in shortcut callback: %s", e)
+        if hotkey_id == HOTKEY_ID_MAIN:
+            if now - self._last_trigger_time < 0.25:
+                return
+            self._last_trigger_time = now
+            if self.callback:
+                try:
+                    self.callback()
+                except Exception as e:
+                    logger.error("Error in main shortcut callback: %s", e)
+        elif hotkey_id == HOTKEY_ID_QUICK_CONVERT:
+            if now - self._last_quick_trigger_time < 0.25:
+                return
+            self._last_quick_trigger_time = now
+            if self.quick_convert_callback:
+                try:
+                    self.quick_convert_callback()
+                except Exception as e:
+                    logger.error("Error in quick convert callback: %s", e)
 
-    def _win32_hotkey_loop(self, modifiers: int, vk: int) -> None:
-        """Dedicated Win32 thread that registers the OS hotkey and pumps WM_HOTKEY."""
+    def _wrapper(self) -> None:
+        """Fallback callback for main shortcut."""
+        self._handle_trigger(HOTKEY_ID_MAIN)
+
+    def _win32_hotkey_loop(self, specs: List[Tuple[int, int, int]]) -> None:
+        """Dedicated Win32 thread that registers the OS hotkeys and pumps WM_HOTKEY."""
         user32 = ctypes.windll.user32
         kernel32 = ctypes.windll.kernel32
         self._win32_thread_id = kernel32.GetCurrentThreadId()
@@ -114,15 +134,19 @@ class ShortcutManager:
         msg = wintypes.MSG()
         user32.PeekMessageW(ctypes.byref(msg), None, 0, 0, 0)
 
-        registered = bool(user32.RegisterHotKey(None, HOTKEY_ID, modifiers | MOD_NOREPEAT, vk))
-        if not registered:
-            # Try without MOD_NOREPEAT on older Windows builds
-            registered = bool(user32.RegisterHotKey(None, HOTKEY_ID, modifiers, vk))
+        registered_ids: List[int] = []
+        for h_id, mods, vk in specs:
+            registered = bool(user32.RegisterHotKey(None, h_id, mods | MOD_NOREPEAT, vk))
+            if not registered:
+                # Try without MOD_NOREPEAT on older Windows builds
+                registered = bool(user32.RegisterHotKey(None, h_id, mods, vk))
+            if registered:
+                registered_ids.append(h_id)
 
-        self._win32_success = registered
+        self._win32_success = len(registered_ids) > 0
         self._ready_event.set()
 
-        if not registered:
+        if not registered_ids:
             return
 
         try:
@@ -130,29 +154,47 @@ class ShortcutManager:
                 ret = user32.GetMessageW(ctypes.byref(msg), None, 0, 0)
                 if ret <= 0 or msg.message == WM_QUIT:
                     break
-                if msg.message == WM_HOTKEY and msg.wParam == HOTKEY_ID:
-                    self._wrapper()
+                if msg.message == WM_HOTKEY:
+                    self._handle_trigger(msg.wParam)
         finally:
-            try:
-                user32.UnregisterHotKey(None, HOTKEY_ID)
-            except Exception:
-                pass
+            for h_id in registered_ids:
+                try:
+                    user32.UnregisterHotKey(None, h_id)
+                except Exception:
+                    pass
 
-    def register(self, shortcut: str, callback: Callable[[], None]) -> bool:
-        """Register a global keyboard shortcut with a callback."""
+    def register(
+        self,
+        shortcut: str,
+        callback: Callable[[], None],
+        quick_convert_shortcut: Optional[str] = None,
+        quick_convert_callback: Optional[Callable[[], None]] = None,
+    ) -> bool:
+        """Register global keyboard shortcuts with callbacks."""
         self.unregister()
         self.current_shortcut = shortcut
         self.callback = callback
+        self.quick_convert_shortcut = quick_convert_shortcut
+        self.quick_convert_callback = quick_convert_callback
 
+        specs: List[Tuple[int, int, int]] = []
         if sys.platform.startswith("win"):
-            modifiers, vk = parse_win32_shortcut(shortcut)
-            if modifiers and vk:
+            mods_main, vk_main = parse_win32_shortcut(shortcut)
+            if mods_main and vk_main:
+                specs.append((HOTKEY_ID_MAIN, mods_main, vk_main))
+
+            if quick_convert_shortcut and quick_convert_callback:
+                mods_qc, vk_qc = parse_win32_shortcut(quick_convert_shortcut)
+                if mods_qc and vk_qc:
+                    specs.append((HOTKEY_ID_QUICK_CONVERT, mods_qc, vk_qc))
+
+            if specs:
                 self._stop_event.clear()
                 self._ready_event.clear()
                 self._win32_success = False
                 self._win32_thread = threading.Thread(
                     target=self._win32_hotkey_loop,
-                    args=(modifiers, vk),
+                    args=(specs,),
                     daemon=True,
                     name="Win32HotkeyThread",
                 )
@@ -162,27 +204,29 @@ class ShortcutManager:
                 if self._win32_success:
                     self._is_registered = True
                     self._using_keyboard_fallback = False
-                    logger.info("Registered native Win32 global shortcut: %s", shortcut)
+                    logger.info("Registered native Win32 global shortcut(s): %s", specs)
                     return True
                 else:
                     logger.warning(
-                        "Native Win32 RegisterHotKey could not bind '%s', falling back to keyboard hook.",
-                        shortcut,
+                        "Native Win32 RegisterHotKey could not bind shortcuts, falling back to keyboard hook."
                     )
 
         # Fallback to keyboard library if Win32 RegisterHotKey was unavailable
         try:
-            keyboard.add_hotkey(shortcut, self._wrapper)
+            if shortcut:
+                keyboard.add_hotkey(shortcut, lambda: self._handle_trigger(HOTKEY_ID_MAIN))
+            if quick_convert_shortcut and quick_convert_callback:
+                keyboard.add_hotkey(quick_convert_shortcut, lambda: self._handle_trigger(HOTKEY_ID_QUICK_CONVERT))
             self._is_registered = True
             self._using_keyboard_fallback = True
-            logger.info("Registered global shortcut via keyboard hook: %s", shortcut)
+            logger.info("Registered global shortcut(s) via keyboard hook: %s, %s", shortcut, quick_convert_shortcut)
             return True
         except Exception as e:
-            logger.error("Failed to register shortcut '%s': %s", shortcut, e)
+            logger.error("Failed to register shortcut: %s", e)
             return False
 
     def unregister(self) -> None:
-        """Unregister currently active global shortcut."""
+        """Unregister currently active global shortcuts."""
         if not self._is_registered:
             return
 
@@ -197,9 +241,15 @@ class ShortcutManager:
 
         if self._using_keyboard_fallback:
             try:
-                keyboard.remove_hotkey(self.current_shortcut)
+                if self.current_shortcut:
+                    keyboard.remove_hotkey(self.current_shortcut)
             except Exception as e:
                 logger.debug("Failed unregistering keyboard fallback shortcut: %s", e)
+            try:
+                if self.quick_convert_shortcut:
+                    keyboard.remove_hotkey(self.quick_convert_shortcut)
+            except Exception as e:
+                logger.debug("Failed unregistering quick convert fallback shortcut: %s", e)
 
         self._win32_thread = None
         self._win32_thread_id = None

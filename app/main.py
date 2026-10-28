@@ -132,6 +132,7 @@ def create_tray_icon() -> QIcon:
 class HotkeyBridge(QObject):
     """Thread-safe bridge to deliver global hotkey triggers to the Qt event loop."""
     hotkey_pressed = Signal()
+    quick_convert_pressed = Signal()
 
 
 class CaptureWorker(QThread):
@@ -151,6 +152,31 @@ class CaptureWorker(QThread):
             self.no_text_selected.emit()
 
 
+class QuickConvertWorker(QThread):
+    """Dedicated background worker to capture Bijoy text, convert to Unicode offline, and replace in active app with NO window."""
+    conversion_finished = Signal(bool, int)
+
+    def run(self):
+        try:
+            logger.info("QuickConvertWorker: Capturing text from active application...")
+            captured = ClipboardManager.capture_selected_text()
+            if not captured or not captured.strip():
+                logger.info("QuickConvertWorker: No text selected.")
+                self.conversion_finished.emit(False, 0)
+                return
+
+            logger.info("QuickConvertWorker: Captured %d characters. Converting Bijoy to Unicode offline...", len(captured))
+            from app.utils.bijoy_converter import convert_bijoy_to_unicode
+            unicode_text = convert_bijoy_to_unicode(captured)
+
+            logger.info("QuickConvertWorker: Injecting converted text into active application...")
+            ClipboardManager.paste_into_active_window(unicode_text, set_clipboard=True)
+            self.conversion_finished.emit(True, len(unicode_text))
+        except Exception as e:
+            logger.error("Error in QuickConvertWorker: %s", e)
+            self.conversion_finished.emit(False, 0)
+
+
 class BanglaProofreaderApp:
     """Core Application Coordinator."""
 
@@ -158,13 +184,15 @@ class BanglaProofreaderApp:
         self.engine_manager = EngineManager()
         self.diff_window = DiffWindow(engine_manager=self.engine_manager)
         saved_shortcut = (load_config().get("shortcut", "ctrl+alt+b") or "ctrl+alt+b").strip().lower()
-        if saved_shortcut not in ("ctrl+alt+b", "ctrl+alt+z", "ctrl+alt+x", "ctrl+alt+c"):
+        if saved_shortcut not in ("ctrl+alt+b", "ctrl+alt+z", "ctrl+alt+x"):
             saved_shortcut = "ctrl+alt+b"
         self.shortcut_manager = ShortcutManager(default_shortcut=saved_shortcut)
         self.bridge = HotkeyBridge()
         self.bridge.hotkey_pressed.connect(self.on_hotkey_triggered)
+        self.bridge.quick_convert_pressed.connect(self.on_quick_convert_triggered)
         self.diff_window.shortcut_changed.connect(self.update_shortcut)
         self.capture_worker: Optional[CaptureWorker] = None
+        self.quick_convert_worker: Optional[QuickConvertWorker] = None
 
         self.tray_icon: Optional[QSystemTrayIcon] = None
         self.init_tray()
@@ -235,23 +263,50 @@ class BanglaProofreaderApp:
         self.diff_window.open_settings_dialog()
 
     def init_shortcuts(self):
-        """Register the system-wide global hotkey."""
+        """Register system-wide global hotkeys."""
         self.update_shortcut(self.shortcut_manager.current_shortcut)
 
-    def update_shortcut(self, shortcut: str):
-        """Register or update the global shortcut dynamically."""
-        shortcut = (shortcut or "ctrl+alt+b").strip().lower()
-        if shortcut not in ("ctrl+alt+b", "ctrl+alt+z", "ctrl+alt+x", "ctrl+alt+c"):
-            shortcut = "ctrl+alt+b"
+    def update_shortcut(self, shortcut: Optional[str] = None):
+        """Register or update global shortcuts dynamically."""
+        cfg = load_config()
+        sc = (shortcut or cfg.get("shortcut", "ctrl+alt+b") or "ctrl+alt+b").strip().lower()
+        if sc not in ("ctrl+alt+b", "ctrl+alt+z", "ctrl+alt+x"):
+            sc = "ctrl+alt+b"
 
-        def trigger():
+        quick_enabled = cfg.get("quick_convert_enabled", True)
+        quick_sc = "ctrl+alt+c" if quick_enabled else None
+
+        def trigger_main():
             self.bridge.hotkey_pressed.emit()
 
-        success = self.shortcut_manager.register(shortcut, trigger)
+        def trigger_quick():
+            self.bridge.quick_convert_pressed.emit()
+
+        success = self.shortcut_manager.register(
+            shortcut=sc,
+            callback=trigger_main,
+            quick_convert_shortcut=quick_sc,
+            quick_convert_callback=trigger_quick if quick_sc else None,
+        )
         if success:
-            logger.info("Global shortcut %s registered successfully.", shortcut)
+            logger.info("Global shortcuts registered: main=%s, quick_convert=%s", sc, quick_sc)
         else:
-            logger.warning("Could not register global hotkey %s (admin rights may be required on Windows).", shortcut)
+            logger.warning("Could not register one or more global shortcuts.")
+
+    def on_quick_convert_triggered(self):
+        """Called when Ctrl+Alt+C is pressed anywhere in Windows (Quick Unicode Convert without window)."""
+        logger.info("Quick convert shortcut (Ctrl+Alt+C) triggered. Launching QuickConvertWorker...")
+        if self.quick_convert_worker and self.quick_convert_worker.isRunning():
+            logger.info("Quick convert worker is already running. Ignoring duplicate trigger.")
+            return
+
+        self.quick_convert_worker = QuickConvertWorker()
+        self.quick_convert_worker.conversion_finished.connect(self.on_quick_convert_finished)
+        self.quick_convert_worker.start()
+
+    def on_quick_convert_finished(self, success: bool, char_count: int):
+        if success:
+            logger.info("Quick convert completed: %d characters converted and replaced.", char_count)
 
     def on_hotkey_triggered(self):
         """Called when Ctrl+Alt+B is pressed anywhere in Windows."""

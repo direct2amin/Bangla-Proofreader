@@ -109,11 +109,14 @@ class TestTrayAutostartZoom(unittest.TestCase):
         self.assertEqual(dlg_bn.cancel_btn.text(), "বাতিল")
         self.assertNotIn("(", dlg_bn.save_btn.text())  # No mixed language
 
-        # Verify selectable shortcut combobox options (Z, X, C, B - and NEVER V)
+        # Verify selectable shortcut combobox options (Z, X, B - and NEVER V, and C is reserved for quick convert)
         self.assertTrue(hasattr(dlg_en, "shortcut_combo"))
         shortcut_values = [dlg_en.shortcut_combo.itemData(i) for i in range(dlg_en.shortcut_combo.count())]
-        self.assertEqual(set(shortcut_values), {"ctrl+alt+b", "ctrl+alt+z", "ctrl+alt+x", "ctrl+alt+c"})
+        self.assertEqual(set(shortcut_values), {"ctrl+alt+b", "ctrl+alt+z", "ctrl+alt+x"})
         self.assertNotIn("ctrl+alt+v", shortcut_values)
+        self.assertNotIn("ctrl+alt+c", shortcut_values)
+        self.assertTrue(hasattr(dlg_en, "quick_convert_chk"))
+        self.assertTrue(dlg_en.quick_convert_chk.isChecked())
 
     def test_win32_shortcut_parser(self):
         from app.core.shortcuts import parse_win32_shortcut, MOD_CONTROL, MOD_ALT
@@ -148,6 +151,18 @@ class TestTrayAutostartZoom(unittest.TestCase):
             self.assertEqual(ctrl.pause_hotkey_action.text(), "Resume Hotkey")
             ctrl.toggle_hotkey_pause()
             self.assertEqual(ctrl.pause_hotkey_action.text(), "Pause Hotkey")
+
+    def test_quick_convert_worker_offline_conversion(self):
+        from unittest.mock import patch
+        from app.main import QuickConvertWorker
+        from app.core.clipboard import ClipboardManager
+
+        worker = QuickConvertWorker()
+        with patch.object(ClipboardManager, "capture_selected_text", return_value="Avwg evsjvq Mvb MvB") as mock_cap, \
+             patch.object(ClipboardManager, "paste_into_active_window") as mock_paste:
+            worker.run()
+            mock_cap.assert_called_once()
+            mock_paste.assert_called_once_with("আমি বাংলায় গান গাই", set_clipboard=True)
 
 
 if __name__ == "__main__":
