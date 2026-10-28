@@ -254,19 +254,6 @@ class DiffWindow(QMainWindow):
         self.mode_combo.currentIndexChanged.connect(self.on_mode_changed)
         toolbar_layout.addWidget(self.mode_combo)
 
-        toolbar_layout.addSpacing(12)
-
-        # Progress bar (hidden by default)
-        self.progress_bar = QProgressBar()
-        self.progress_bar.setRange(0, 0)  # indeterminate animation
-        self.progress_bar.setFixedWidth(160)
-        self.progress_bar.setVisible(False)
-        toolbar_layout.addWidget(self.progress_bar)
-
-        self.progress_log_lbl = QLabel("")
-        self.progress_log_lbl.setStyleSheet("color: #2563eb; font-weight: 600; font-size: 13px;")
-        toolbar_layout.addWidget(self.progress_log_lbl)
-
         toolbar_layout.addStretch()
 
         # Font size zoom controls (A- / Reset / A+)
@@ -454,6 +441,25 @@ class DiffWindow(QMainWindow):
         self.shortcut_status_label = QLabel()
         self.shortcut_status_label.setContentsMargins(6, 2, 6, 2)
         self.status_bar.addWidget(self.shortcut_status_label)
+
+        # Progress bar and status log placed in status bar next to Global Shortcut
+        self.status_bar_separator = QLabel("  |  ")
+        self.status_bar_separator.setStyleSheet("color: #94a3b8; font-weight: 400;")
+        self.status_bar_separator.setVisible(False)
+        self.status_bar.addWidget(self.status_bar_separator)
+
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setRange(0, 0)  # indeterminate animation
+        self.progress_bar.setFixedWidth(130)
+        self.progress_bar.setFixedHeight(14)
+        self.progress_bar.setVisible(False)
+        self.status_bar.addWidget(self.progress_bar)
+
+        self.progress_log_lbl = QLabel("")
+        self.progress_log_lbl.setStyleSheet("color: #2563eb; font-weight: 600; font-size: 12px; margin-left: 6px;")
+        self.progress_log_lbl.setVisible(False)
+        self.status_bar.addWidget(self.progress_log_lbl)
+
         self.setStatusBar(self.status_bar)
 
     def update_shortcut_status(self, shortcut: Optional[str] = None) -> None:
@@ -565,7 +571,9 @@ class DiffWindow(QMainWindow):
             self.stats_label.setStyleSheet("color: #94a3b8; font-weight: 600;")
             self.shortcut_status_label.setStyleSheet("color: #cbd5e1; font-weight: 600; font-size: 12.5px;")
             self.feedback_label.setStyleSheet("color: #4ade80; font-weight: 600; padding-right: 10px;")
-            self.progress_log_lbl.setStyleSheet("color: #60a5fa; font-weight: 600; font-size: 13px;")
+            self.progress_log_lbl.setStyleSheet("color: #60a5fa; font-weight: 600; font-size: 12px; margin-left: 6px;")
+            if hasattr(self, "status_bar_separator"):
+                self.status_bar_separator.setStyleSheet("color: #64748b; font-weight: 400;")
         else:
             self.api_lbl.setStyleSheet("font-weight: 600; color: #475569;")
             self.zoom_lbl.setStyleSheet("font-weight: 600; color: #475569; font-size: 13px;")
@@ -577,7 +585,9 @@ class DiffWindow(QMainWindow):
             self.stats_label.setStyleSheet("color: #475569; font-weight: 600;")
             self.shortcut_status_label.setStyleSheet("color: #334155; font-weight: 600; font-size: 12.5px;")
             self.feedback_label.setStyleSheet("color: #16a34a; font-weight: 600; padding-right: 10px;")
-            self.progress_log_lbl.setStyleSheet("color: #2563eb; font-weight: 600; font-size: 13px;")
+            self.progress_log_lbl.setStyleSheet("color: #2563eb; font-weight: 600; font-size: 12px; margin-left: 6px;")
+            if hasattr(self, "status_bar_separator"):
+                self.status_bar_separator.setStyleSheet("color: #94a3b8; font-weight: 400;")
 
     def on_mode_changed(self, _index: int = 0):
         """Handle switching between Offline (Local Dictionary) and Online AI (Gemini) modes."""
@@ -788,7 +798,10 @@ class DiffWindow(QMainWindow):
 
         # Disable buttons and show progress bar (normal cursor maintained, no freeze)
         self.set_actions_enabled(False)
+        if hasattr(self, "status_bar_separator"):
+            self.status_bar_separator.setVisible(True)
         self.progress_bar.setVisible(True)
+        self.progress_log_lbl.setVisible(True)
         self.progress_log_lbl.setText(t("progress_starting", self.lang))
         self.update_shortcut_status()
 
@@ -806,6 +819,10 @@ class DiffWindow(QMainWindow):
 
     def on_worker_progress(self, message: str):
         """Update live status message from background thread."""
+        if hasattr(self, "status_bar_separator"):
+            self.status_bar_separator.setVisible(True)
+        self.progress_bar.setVisible(True)
+        self.progress_log_lbl.setVisible(True)
         self.progress_log_lbl.setText(message)
 
     def on_worker_finished(self, corrected_text: str, diff_result: DiffResult):
@@ -817,7 +834,10 @@ class DiffWindow(QMainWindow):
         self.refresh_views()
 
         # Clean up UI state and keep bottom-left shortcut status visible
+        if hasattr(self, "status_bar_separator"):
+            self.status_bar_separator.setVisible(False)
         self.progress_bar.setVisible(False)
+        self.progress_log_lbl.setVisible(False)
         self.progress_log_lbl.setText("")
         self.set_actions_enabled(True)
         self.update_shortcut_status()
@@ -828,7 +848,10 @@ class DiffWindow(QMainWindow):
 
     def on_worker_error(self, err_msg: str):
         """Called when background worker encounters an error."""
+        if hasattr(self, "status_bar_separator"):
+            self.status_bar_separator.setVisible(False)
         self.progress_bar.setVisible(False)
+        self.progress_log_lbl.setVisible(False)
         self.progress_log_lbl.setText("")
         self.set_actions_enabled(True)
         self.update_shortcut_status()

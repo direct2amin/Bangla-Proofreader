@@ -40,7 +40,13 @@ def normalize_bangla_word(w: str) -> str:
     )
 
 
-# Standard Bengali inflectional suffixes (বিভক্তি ও প্রত্যয়) ordered longest-first
+# Standard Bengali inflectional suffixes and clitics in order of length (longest first)
+MORPH_SUFFIXES: Tuple[str, ...] = (
+    "গুলোর", "গুলিতে", "গুলো", "গুলি", "দেরকে", "দের",
+    "খানা", "খানি", "তেই", "তে", "ের", "কে", "রে", "রা",
+    "টা", "টি", "য়", "ে", "র",
+)
+
 INFLECTION_SUFFIXES: Tuple[str, ...] = (
     "গুলোকে", "গুলোতে", "গুলোর", "গুলোয়", "গুলোই", "গুলো", "গুলি",
     "দেরকে", "দেরই", "দের",
@@ -48,7 +54,7 @@ INFLECTION_SUFFIXES: Tuple[str, ...] = (
     "টাকে", "টাতে", "টার", "টাই", "টা",
     "খানাকে", "খানাতে", "খানার", "খানা", "খানি",
     "বৃন্দ", "সমূহ", "মণ্ডলী", "গণ",
-    "তে", "কে", "রা", "ের", "য়ে",
+    "তেই", "তে", "কে", "রে", "রা", "ের", "য়ে",
     "র", "য়", "ে", "ই", "ও",
 )
 
@@ -339,8 +345,94 @@ class OfflineSpellChecker:
             OfflineSpellChecker._shared_word_rank = word_rank
             OfflineSpellChecker._shared_phonetic_index = phonetic_index
 
+    def is_root_valid(self, stem: str) -> bool:
+        """Check if stem is present directly in the dictionary or cultural vocabulary."""
+        if not stem:
+            return False
+        s = normalize_bangla_word(stem)
+        if s in DIRECT_CORRECTIONS:
+            return False
+        # If this stem itself has a sub-stem in DIRECT_CORRECTIONS, it's invalid
+        for suf in MORPH_SUFFIXES:
+            if s.endswith(suf) and len(s) - len(suf) >= 3:
+                inner_stem = s[:-len(suf)]
+                if inner_stem in DIRECT_CORRECTIONS:
+                    return False
+        if s in self.word_set or s in ISLAMIC_AND_CULTURAL_VOCAB:
+            return True
+        if is_arabic_word(s, s) or is_foreign_word(s, s):
+            return True
+        return False
+
+    def decompose_word(self, word: str) -> Tuple[str, str]:
+        """Decompose an inflected word into (stem, suffix).
+
+        1. Check if the word matches a suffix where the stem is known to be in DIRECT_CORRECTIONS
+           (e.g. 'লাইব্রেরী' in 'লাইব্রেরীর'). If so, extract (stem, suffix).
+        2. Check if the whole word directly exists in the dictionary and is valid. If yes, return (word, "").
+        3. Otherwise, scan for matching trailing suffixes from MORPH_SUFFIXES (only if remaining stem length >= 3).
+        4. Extract stem and suffix. If no match, return (word, "").
+        """
+        w = normalize_bangla_word(word)
+        if not w:
+            return ("", "")
+
+        # Check for matching suffix where the stem is in DIRECT_CORRECTIONS
+        for suf in MORPH_SUFFIXES:
+            if w.endswith(suf):
+                stem = w[:-len(suf)]
+                if len(stem) >= 3 and stem in DIRECT_CORRECTIONS:
+                    return (stem, suf)
+
+        # Check if the whole word directly exists in the dictionary
+        if self.is_root_valid(w):
+            return (w, "")
+
+        for suf in MORPH_SUFFIXES:
+            if w.endswith(suf):
+                stem = w[:-len(suf)]
+                if len(stem) >= 3:
+                    return (stem, suf)
+
+        return (w, "")
+
+    def suggest_root(self, stem: str) -> List[str]:
+        """Find the closest valid dictionary suggestion for an invalid stem (Edit Distance <= 1)."""
+        s = normalize_bangla_word(stem)
+        if not s:
+            return []
+
+        # 1. Direct standard correction mapping
+        if s in DIRECT_CORRECTIONS:
+            return [DIRECT_CORRECTIONS[s]]
+
+        # 2. Check trailing ী -> ি or ি -> ী conversion
+        # e.g., লাইব্রেরী -> লাইব্রেরি, একাডেমি, শ্রেণি
+        if s.endswith("ী"):
+            cand = s[:-1] + "ি"
+            if self.is_root_valid(cand):
+                return [cand]
+        elif s.endswith("ি"):
+            cand = s[:-1] + "ী"
+            if self.is_root_valid(cand):
+                return [cand]
+
+        # 3. Check conservative orthographic index (Edit distance == 1 AND identical phonetic skeleton)
+        s_pkey = phonetic_key(s)
+        candidates = self._phonetic_index.get(s_pkey, [])
+        scored: List[Tuple[int, str]] = []
+        for cand in candidates:
+            if cand == s or len(cand) != len(s):
+                continue
+            if levenshtein_distance(s, cand, max_dist=1) == 1:
+                rank = self.word_rank.get(cand, 999999)
+                scored.append((rank, cand))
+
+        scored.sort(key=lambda item: item[0])
+        return [cand for _, cand in scored]
+
     def is_valid_word(self, word: str) -> bool:
-        """O(1) membership check with comprehensive Bengali inflection/suffix stemming (বিভক্তি/প্রত্যয়)."""
+        """O(1) membership check with Morphological Stemming & Suffix Handling (বিভক্তি/প্রত্যয়)."""
         if not word:
             return True
         w = normalize_bangla_word(word)
@@ -354,38 +446,47 @@ class OfflineSpellChecker:
             return False
 
         # 1. Direct O(1) dictionary or Islamic/Arabic/Foreign vocabulary check
-        if w in self.word_set or w in ISLAMIC_AND_CULTURAL_VOCAB:
-            return True
-        if is_arabic_word(w, w) or is_foreign_word(w, w):
+        if self.is_root_valid(w):
             return True
 
-        # 2. Bengali Stemming & Suffix Handling (বিভক্তি/প্রত্যয়):
-        # Strip standard trailing inflection suffixes and check if the base root exists in the dictionary.
+        # 2. Morphological Decomposition:
+        stem, suf = self.decompose_word(w)
+        if suf:
+            # Step A: Check if stem is already a valid dictionary word
+            if stem in DIRECT_CORRECTIONS:
+                return False
+            if self.is_root_valid(stem):
+                return True
+            # Handle stem ending in आ-কার + 'র'/'য়'/'তে' where root has no আ-কার or vice versa
+            if suf in ("র", "য়", "তে", "কে") and stem.endswith("া") and len(stem) >= 3:
+                bare_stem = stem[:-1]
+                if self.is_root_valid(bare_stem):
+                    return True
+
+        # Fallback check for shorter words with stem len >= 2 (e.g. বইখানা, মা-কে, ইত্যাদি)
         for suf in INFLECTION_SUFFIXES:
             if w.endswith(suf) and len(w) - len(suf) >= 2:
-                stem = w[:-len(suf)]
-                if stem in DIRECT_CORRECTIONS:
+                short_stem = w[:-len(suf)]
+                if short_stem in DIRECT_CORRECTIONS:
                     return False
-                if (
-                    stem in self.word_set
-                    or stem in ISLAMIC_AND_CULTURAL_VOCAB
-                    or is_arabic_word(stem, stem)
-                    or is_foreign_word(stem, stem)
-                ):
+                if self.is_root_valid(short_stem):
                     return True
-                # Handle stem ending in आ-কার + 'র'/'য়'/'তে' where root has no আ-কার or vice versa
-                if suf in ("র", "য়", "তে", "কে") and stem.endswith("া") and len(stem) >= 3:
-                    bare_stem = stem[:-1]
-                    if bare_stem in self.word_set or bare_stem in ISLAMIC_AND_CULTURAL_VOCAB:
-                        return True
 
         return False
 
     def suggest(self, word: str, max_suggestions: int = 5) -> List[str]:
-        """Generate high-confidence suggestions using strictly edit distance <= 1 and orthographic equivalence.
+        """Generate high-confidence suggestions using Morphological Stemming & Re-inflection.
 
-        Never drops case endings (e.g. 'খুতবায়' -> 'খুতবা' is forbidden) and never swaps different
-        base consonants (e.g. 'রুজির' -> 'রুচির' is forbidden).
+        1. Suffix Stripping & Extraction via decompose_word(word).
+        2. Root Correction & Re-inflection:
+           - Step A: If stem is already valid, word is valid -> []
+           - Step B: If stem is invalid, find closest valid suggestion for stem.
+           - Step C: Re-attach original suffix to corrected stem:
+                     Corrected Root + Original Suffix (e.g. 'লাইব্রেরি' + 'র' = 'লাইব্রেরির').
+           - Add this recombined form as primary suggestion.
+        3. Safeguards:
+           - Never drops case endings / suffixes.
+           - Conservative edit-distance-1 threshold; preserves root meaning.
         """
         w = normalize_bangla_word(word)
         if not w or self.is_valid_word(w):
@@ -394,25 +495,44 @@ class OfflineSpellChecker:
         if w in self._suggestion_cache:
             return self._suggestion_cache[w][:max_suggestions]
 
-        # 1. Instant direct correction table
+        # 1. Instant direct correction table for whole word
         if w in DIRECT_CORRECTIONS:
             corr = DIRECT_CORRECTIONS[w]
             self._suggestion_cache[w] = [corr]
             return [corr]
 
-        # 2. Stem + Inflection Suffix preservation:
-        # If stem is in DIRECT_CORRECTIONS (e.g., 'পরিক্ষা' + 'য়' -> 'পরীক্ষায়'), preserve the suffix!
-        for suf in INFLECTION_SUFFIXES:
-            if w.endswith(suf) and len(w) - len(suf) >= 2:
-                stem = w[:-len(suf)]
-                if stem in DIRECT_CORRECTIONS:
-                    corr = DIRECT_CORRECTIONS[stem] + suf
+        # 2. Morphological Stemming & Re-inflection Engine
+        stem, suf = self.decompose_word(w)
+        if suf:
+            # Step A: If stem is already a valid dictionary word, keep original word unchanged
+            if self.is_root_valid(stem):
+                self._suggestion_cache[w] = []
+                return []
+
+            # Step B: If stem is invalid, find closest valid dictionary suggestion for stem
+            root_suggestions = self.suggest_root(stem)
+
+            # Step C: Re-attach the original suffix to the corrected stem
+            recombined_suggestions: List[str] = []
+            for corr_stem in root_suggestions:
+                recombined = corr_stem + suf
+                if recombined not in recombined_suggestions:
+                    recombined_suggestions.append(recombined)
+
+            if recombined_suggestions:
+                self._suggestion_cache[w] = recombined_suggestions[:max_suggestions]
+                return recombined_suggestions[:max_suggestions]
+
+        # Fallback to checking other suffixes in INFLECTION_SUFFIXES if decompose_word had len < 3 or didn't match
+        for alt_suf in INFLECTION_SUFFIXES:
+            if w.endswith(alt_suf) and len(w) - len(alt_suf) >= 2:
+                short_stem = w[:-len(alt_suf)]
+                if short_stem in DIRECT_CORRECTIONS:
+                    corr = DIRECT_CORRECTIONS[short_stem] + alt_suf
                     self._suggestion_cache[w] = [corr]
                     return [corr]
 
-        # 3. Conservative Orthographic Match (Strictly Edit Distance == 1 AND identical phonetic_key)
-        # This only fixes genuine ই/ঈ, উ/ঊ, ন/ণ, শ/ষ/স, র/ড়/ঢ়, ত/ৎ confusions without ever
-        # changing root consonants (জ != চ) or stripping suffixes!
+        # 3. Whole-word conservative orthographic match (Edit Distance == 1 AND identical phonetic skeleton)
         pkey = phonetic_key(w)
         candidates = self._phonetic_index.get(pkey, [])
         scored: List[Tuple[int, str]] = []
@@ -424,28 +544,10 @@ class OfflineSpellChecker:
                 rank = self.word_rank.get(cand, 999999)
                 scored.append((rank, cand))
 
-        # 4. Also check Stem + Suffix where the Stem has an exact edit-distance-1 orthographic match
-        if not scored:
-            for suf in INFLECTION_SUFFIXES:
-                if w.endswith(suf) and len(w) - len(suf) >= 3:
-                    stem = w[:-len(suf)]
-                    stem_pkey = phonetic_key(stem)
-                    for cand_stem in self._phonetic_index.get(stem_pkey, []):
-                        if cand_stem != stem and len(cand_stem) == len(stem):
-                            if levenshtein_distance(stem, cand_stem, max_dist=1) == 1:
-                                rank = self.word_rank.get(cand_stem, 999999)
-                                scored.append((rank, cand_stem + suf))
-
         scored.sort(key=lambda item: item[0])
-        results: List[str] = []
-        for _, cand in scored:
-            if cand not in results:
-                results.append(cand)
-            if len(results) >= max_suggestions:
-                break
-
-        self._suggestion_cache[w] = results
-        return results
+        results: List[str] = [c for _, c in scored]
+        self._suggestion_cache[w] = results[:max_suggestions]
+        return results[:max_suggestions]
 
     def correct_word(self, word: str) -> str:
         """Return a high-confidence corrected word if available; when in doubt, leave original word untouched."""
@@ -496,3 +598,10 @@ class OfflineSpellChecker:
         result = "".join(corrected_tokens)
         result = apply_gazetteer_corrections(working, result)
         return result
+
+
+def decompose_word(word: str, checker: Optional[OfflineSpellChecker] = None) -> Tuple[str, str]:
+    """Module-level helper to decompose an inflected word into (stem, suffix)."""
+    chk = checker or OfflineSpellChecker()
+    return chk.decompose_word(word)
+

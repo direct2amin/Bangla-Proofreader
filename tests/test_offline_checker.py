@@ -115,6 +115,48 @@ class TestOfflineCheckerAndModeSwitcher(unittest.TestCase):
 
         engine_mgr.set_mode("online")
 
+    def test_morphological_stemming_and_reinflection_engine(self):
+        """Verify decompose_word, root correction, and suffix re-attachment."""
+        # 1. decompose_word
+        self.assertEqual(self.checker.decompose_word("খুতবা"), ("খুতবা", ""))
+        self.assertEqual(self.checker.decompose_word("খুতবায়"), ("খুতবায়", ""))
+        self.assertEqual(self.checker.decompose_word("লাইব্রেরীর"), ("লাইব্রেরী", "র"))
+        self.assertEqual(self.checker.decompose_word("লাইব্রেরীতে"), ("লাইব্রেরী", "তে"))
+        self.assertEqual(self.checker.decompose_word("ছাত্রদেরকে"), ("ছাত্র", "দেরকে"))
+
+        # 2. Root Correction & Re-inflection:
+        # "লাইব্রেরীর" -> root "লাইব্রেরী" corrected to "লাইব্রেরি" + suffix "র" = "লাইব্রেরির"
+        self.assertFalse(self.checker.is_valid_word("লাইব্রেরীর"))
+        self.assertEqual(self.checker.suggest("লাইব্রেরীর"), ["লাইব্রেরির"])
+        self.assertEqual(self.checker.correct_word("লাইব্রেরীর"), "লাইব্রেরির")
+
+        # "লাইব্রেরীতে" -> "লাইব্রেরিতে"
+        self.assertEqual(self.checker.correct_word("লাইব্রেরীতে"), "লাইব্রেরিতে")
+
+        # "পরিক্ষায়" -> "পরীক্ষায়"
+        self.assertEqual(self.checker.correct_word("পরিক্ষায়"), "পরীক্ষায়")
+
+        # "ভূলগুলো" -> "ভুলগুলো"
+        self.assertEqual(self.checker.correct_word("ভূলগুলো"), "ভুলগুলো")
+
+        # "সহযোগীতায়" -> "সহযোগিতায়"
+        self.assertEqual(self.checker.correct_word("সহযোগীতায়"), "সহযোগিতায়")
+
+        # Step A safeguards: valid inflected words kept completely unchanged
+        self.assertTrue(self.checker.is_valid_word("ছাত্রদেরকে"))
+        self.assertEqual(self.checker.correct_word("ছাত্রদেরকে"), "ছাত্রদেরকে")
+        self.assertTrue(self.checker.is_valid_word("খুতবায়"))
+        self.assertEqual(self.checker.correct_word("খুতবায়"), "খুতবায়")
+        self.assertTrue(self.checker.is_valid_word("রুজির"))
+        self.assertEqual(self.checker.correct_word("রুজির"), "রুজির")
+
+    def test_progress_bar_in_status_bar_not_toolbar(self):
+        """Verify progress bar and label are placed in bottom status bar, avoiding toolbar collision."""
+        window = DiffWindow()
+        self.assertIs(window.progress_bar.parent(), window.status_bar)
+        self.assertIs(window.progress_log_lbl.parent(), window.status_bar)
+        self.assertIs(window.shortcut_status_label.parent(), window.status_bar)
+
 
 if __name__ == "__main__":
     unittest.main()
