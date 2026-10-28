@@ -29,7 +29,7 @@ CONFIG_FILE = get_config_file_path()
 
 DEFAULT_CONFIG: Dict[str, Any] = {
     "gemini_api_key": os.environ.get("GEMINI_API_KEY", ""),
-    "gemini_model": "gemini-3.5-flash",
+    "gemini_model": "gemini-3.5-flash-lite",
     "shortcut": "ctrl+alt+b",
     "auto_paste": True,
     "ui_language": "en",
@@ -71,9 +71,9 @@ def load_config() -> Dict[str, Any]:
         except Exception:
             pass
 
-    # Ensure model is updated to gemini-3.5-flash if old/slow/lite model is saved
-    if config.get("gemini_model") in ("gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-3.8-flash", "gemini-3.5-flash-lite", None):
-        config["gemini_model"] = "gemini-3.5-flash"
+    # Ensure model is updated to reliable high-capacity gemini-3.5-flash-lite if discontinued or rate-limited model is saved
+    if config.get("gemini_model") in ("gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-3.8-flash", "gemini-3.5-flash", None):
+        config["gemini_model"] = "gemini-3.5-flash-lite"
 
     # Environment variable priority if set
     env_key = os.environ.get("GEMINI_API_KEY", "").strip()

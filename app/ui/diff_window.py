@@ -953,9 +953,10 @@ class DiffWindow(QMainWindow):
         err_lower = str(err_msg).lower()
         if any(k in err_lower for k in (
             "connection", "timeout", "network", "socket", "getaddrinfo",
-            "nameresolutionerror", "failed to establish a new connection"
+            "nameresolutionerror", "failed to establish a new connection",
+            "429", "resource_exhausted", "quota"
         )):
-            logger.info("Network error during online proofread (%s). Auto-switching to Offline Mode.", err_msg)
+            logger.info("Online error during proofread (%s). Auto-switching to Offline Mode.", err_msg)
             self.switch_to_offline_automatically()
             original_text = self._get_orig_plain_text().strip()
             if original_text:
@@ -970,6 +971,25 @@ class DiffWindow(QMainWindow):
         show_themed_message_box(
             self,
             "critical",
+            t("error_title", self.lang),
+            formatted_msg,
+            effective_theme=self.effective_theme,
+        )
+
+    def on_polish_worker_error(self, err_msg: str):
+        """Called when sentence polish background worker encounters an error."""
+        if hasattr(self, "status_bar_separator"):
+            self.status_bar_separator.setVisible(False)
+        self.progress_bar.setVisible(False)
+        self.progress_log_lbl.setVisible(False)
+        self.progress_log_lbl.setText("")
+        self.set_actions_enabled(True)
+        self.update_shortcut_status()
+
+        formatted_msg = format_gemini_error(err_msg, self.lang)
+        show_themed_message_box(
+            self,
+            "warning",
             t("error_title", self.lang),
             formatted_msg,
             effective_theme=self.effective_theme,
@@ -1015,7 +1035,7 @@ class DiffWindow(QMainWindow):
             try:
                 self.polish_worker.progress_signal.disconnect(self.on_worker_progress)
                 self.polish_worker.finished_signal.disconnect(self.on_polish_worker_finished)
-                self.polish_worker.error_signal.disconnect(self.on_worker_error)
+                self.polish_worker.error_signal.disconnect(self.on_polish_worker_error)
             except Exception:
                 pass
 
@@ -1032,7 +1052,7 @@ class DiffWindow(QMainWindow):
         self.polish_worker = PolishWorker(self.engine_manager, input_for_polish, self.lang)
         self.polish_worker.progress_signal.connect(self.on_worker_progress)
         self.polish_worker.finished_signal.connect(self.on_polish_worker_finished)
-        self.polish_worker.error_signal.connect(self.on_worker_error)
+        self.polish_worker.error_signal.connect(self.on_polish_worker_error)
         self.polish_worker.start()
 
     def on_polish_worker_finished(self, polish_result: SentencePolishResult):

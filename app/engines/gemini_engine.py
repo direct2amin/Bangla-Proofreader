@@ -180,7 +180,7 @@ def preserve_line_structure(original: str, corrected: str) -> str:
 class GeminiProofreaderEngine:
     """AI Assisted proofreading engine using Google Gemini API with ultra-fast Flash models."""
 
-    def __init__(self, api_key: Optional[str] = None, model_name: str = "gemini-3.5-flash"):
+    def __init__(self, api_key: Optional[str] = None, model_name: str = "gemini-3.5-flash-lite"):
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY", "")
         self.model_name = model_name
         self.client = None
@@ -260,8 +260,16 @@ class GeminiProofreaderEngine:
         geo_ref = get_geo_reference_for_text(text)
         wrapped_payload = f"<text_to_proofread>\n{text}\n</text_to_proofread>{geo_ref}"
 
-        models_to_try = list(dict.fromkeys([self.model_name or "gemini-3.5-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite"]))
+        models_to_try = list(dict.fromkeys([
+            self.model_name or "gemini-3.5-flash-lite",
+            "gemini-3.5-flash-lite",
+            "gemini-flash-lite-latest",
+            "gemini-3.1-flash-lite",
+            "gemini-3.5-flash",
+            "gemini-flash-latest",
+        ]))
         last_error = None
+        quota_or_auth_error = None
         safety_settings = self._build_safety_settings()
 
         for attempt_idx, model in enumerate(models_to_try):
@@ -333,6 +341,9 @@ class GeminiProofreaderEngine:
                 last_error = e
                 err_str = str(e).lower()
                 if "api_key_invalid" in err_str or "api key not valid" in err_str or "unauthenticated" in err_str:
+                    quota_or_auth_error = e
                     break
+                if any(k in err_str for k in ("429", "resource_exhausted", "quota")):
+                    quota_or_auth_error = e
 
-        raise RuntimeError(f"Gemini API ত্রুটি: {last_error}")
+        raise RuntimeError(f"Gemini API ত্রুটি: {quota_or_auth_error or last_error}")

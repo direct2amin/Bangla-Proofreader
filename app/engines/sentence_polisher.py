@@ -94,8 +94,15 @@ class SentencePolisher:
         if not self.client:
             raise RuntimeError("Gemini API Key is not configured. Please enter your API key in Settings.")
 
-        model_name = config.get("gemini_model", "gemini-3.5-flash")
-        candidate_models = [model_name, "gemini-2.5-flash", "gemini-3.8-flash-lite"]
+        model_name = config.get("gemini_model", "gemini-3.5-flash-lite")
+        candidate_models = list(dict.fromkeys([
+            model_name or "gemini-3.5-flash-lite",
+            "gemini-3.5-flash-lite",
+            "gemini-flash-lite-latest",
+            "gemini-3.1-flash-lite",
+            "gemini-3.5-flash",
+            "gemini-flash-latest",
+        ]))
 
         prompt = (
             f"Please stylistically polish and refine the following Bengali text:\n\n"
@@ -103,6 +110,7 @@ class SentencePolisher:
         )
 
         last_error = None
+        quota_or_auth_error = None
         for cand_model in candidate_models:
             try:
                 gen_config = genai_types.GenerateContentConfig(
@@ -125,13 +133,22 @@ class SentencePolisher:
                     raw_json = "\n".join(lines).strip()
 
                 data = json.loads(raw_json)
-                full_polished = data.get("polished_text", text)
-                raw_changes = data.get("sentence_changes", [])
+                if isinstance(data, list):
+                    raw_changes = data
+                    full_polished = text
+                elif isinstance(data, dict):
+                    full_polished = data.get("polished_text", text)
+                    raw_changes = data.get("sentence_changes", [])
+                else:
+                    raw_changes = []
+                    full_polished = text
 
                 changes: List[SentenceChange] = []
                 for idx, c in enumerate(raw_changes, start=1):
+                    if not isinstance(c, dict):
+                        continue
                     orig_s = str(c.get("original", "")).strip()
-                    pol_s = str(c.get("polished", "")).strip()
+                    pol_s = str(c.get("polished", c.get("polished_cholitriti", ""))).strip()
                     reason = str(c.get("reason", "বাক্য গঠন পরিমার্জন")).strip()
                     if orig_s and pol_s and orig_s != pol_s:
                         changes.append(
@@ -156,8 +173,11 @@ class SentencePolisher:
             except Exception as e:
                 logger.warning("Sentence polish attempt with %s failed: %s", cand_model, e)
                 last_error = e
+                err_str = str(e).lower()
+                if any(k in err_str for k in ("429", "resource_exhausted", "quota", "401", "api_key_invalid", "unauthenticated")):
+                    quota_or_auth_error = e
 
-        raise RuntimeError(f"Sentence Polish failed: {last_error}")
+        raise RuntimeError(f"Sentence Polish failed: {quota_or_auth_error or last_error}")
 
     @staticmethod
     def _fallback_sentence_segmentation(orig: str, polished: str) -> List[SentenceChange]:

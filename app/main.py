@@ -307,7 +307,7 @@ def main():
     if sys.platform.startswith("win"):
         try:
             import ctypes
-            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("amin.banglaproofreader.desktop.1.5.0")
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("amin.banglaproofreader.desktop.1.6.0")
         except Exception:
             pass
 

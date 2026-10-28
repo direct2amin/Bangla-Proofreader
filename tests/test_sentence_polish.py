@@ -112,6 +112,37 @@ class TestSentencePolishAndTwoTierWorkflow(unittest.TestCase):
         self.assertEqual(len(window.accepted_sentence_ids), 1)
         self.assertIn("তিনি কাজটি সম্পন্ন করে প্রস্থান করলেন।", window.corr_browser.toPlainText())
 
+    def test_sentence_polisher_candidate_models_and_list_response(self):
+        """Verify SentencePolisher uses candidate models and handles array/dict responses gracefully."""
+        polisher = SentencePolisher(api_key="fake-test-key")
+        mock_client = MagicMock()
+        polisher.client = mock_client
+
+        # Simulate first model failing with 429 Resource Exhausted, second model succeeding with JSON list
+        mock_resp_fail = MagicMock()
+        mock_resp_fail.side_effect = RuntimeError("429 RESOURCE_EXHAUSTED Quota exceeded")
+
+        mock_resp_success = MagicMock()
+        mock_resp_success.text = (
+            '[\n'
+            '  {\n'
+            '    "original": "তিনি বলিলেন যে যাইবেন।",\n'
+            '    "polished": "তিনি বললেন যে যাবেন।",\n'
+            '    "reason": "গুরুচণ্ডালী দোষ পরিহার"\n'
+            '  }\n'
+            ']'
+        )
+
+        mock_client.models.generate_content.side_effect = [
+            RuntimeError("429 RESOURCE_EXHAUSTED Quota exceeded"),
+            mock_resp_success,
+        ]
+
+        result = polisher.polish_text("তিনি বলিলেন যে যাইবেন।")
+        self.assertEqual(len(result.changes), 1)
+        self.assertEqual(result.changes[0].polished, "তিনি বললেন যে যাবেন।")
+        self.assertEqual(result.changes[0].reason, "গুরুচণ্ডালী দোষ পরিহার")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -19,6 +19,7 @@ hiddenimports = [
     'app.core.theme',
     'app.engines',
     'app.engines.gemini_engine',
+    'app.engines.sentence_polisher',
     'app.ui',
     'app.ui.about_dialog',
     'app.ui.api_guide_dialog',

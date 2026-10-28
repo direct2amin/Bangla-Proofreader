@@ -1,4 +1,4 @@
-# 🇧🇩 বাংলা প্রুফরিডার (Bangla Proofreader) — v1.5.0
+# 🇧🇩 বাংলা প্রুফরিডার (Bangla Proofreader) — v1.6.0
 
 > **AI Assisted Windows Desktop Utility for Bangla Proofreading, Offline Dictionary Spell Checking, Bijoy-to-Unicode Conversion & Linguistic Correction**  
 > সিস্টেম-ওয়াইড গ্লোবাল শর্টকাট, ১,৪০,০০০+ শব্দের অফলাইন ডিকশনারি স্পেল চেকার, অটোমেটিক বিজয়-টু-ইউনিকোড কনভার্টার, আরবি স্ক্রিপ্ট প্রোটেকশন এবং এআই-সহায়ক (AI Assisted) আধুনিক বাংলা প্রুফরিডার।
@@ -9,7 +9,7 @@
 
 সোর্স কোড ছাড়া সরাসরি উইন্ডোজে ব্যবহার করতে চাইলে নিচের লিংকে ক্লিক করে সরাসরি ইনস্টলারটি ডাউনলোড করুন:
 
-👉 **[⬇️ Download BanglaProofreader_Setup_v1.5.0.exe (Windows Installer)](https://github.com/direct2amin/Bangla-Proofreader/raw/main/releases/BanglaProofreader_Setup_v1.5.0.exe)**  
+👉 **[⬇️ Download BanglaProofreader_Setup_v1.6.0.exe (Windows Installer)](https://github.com/direct2amin/Bangla-Proofreader/raw/main/releases/BanglaProofreader_Setup_v1.6.0.exe)**  
 *(অথবা এই রিপোজিটরির **[Releases](https://github.com/direct2amin/Bangla-Proofreader/releases)** ও **[`releases/`](releases/)** ফোল্ডার থেকেও ডাউনলোড করতে পারবেন)*
 
 ---
