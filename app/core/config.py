@@ -37,6 +37,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "start_with_windows": False,
     "editor_font_size": 14,
     "theme": "system",
+    "proofread_mode": "online",
 }
 
 

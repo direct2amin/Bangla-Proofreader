@@ -2,7 +2,7 @@
 ; Generates standalone setup installer with custom installation directory choice and logo branding.
 
 #define MyAppName "Bangla Proofreader"
-#define MyAppVersion "1.4.0"
+#define MyAppVersion "1.5.0"
 #define MyAppPublisher "Amin"
 #define MyAppURL "https://direct2amin.github.io/aminsweb"
 #define MyAppExeName "BanglaProofreader.exe"
@@ -46,8 +46,8 @@ Source: "assets\*"; DestDir: "{app}\assets"; Flags: ignoreversion recursesubdirs
 Source: "assets\*"; DestDir: "{app}\app\assets"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\assets\logo.ico"; AppUserModelID: "amin.banglaproofreader.desktop.1.4.0"
-Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\assets\logo.ico"; Tasks: desktopicon; AppUserModelID: "amin.banglaproofreader.desktop.1.4.0"
+Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\assets\logo.ico"; AppUserModelID: "amin.banglaproofreader.desktop.1.5.0"
+Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\assets\logo.ico"; Tasks: desktopicon; AppUserModelID: "amin.banglaproofreader.desktop.1.5.0"
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
@@ -78,7 +78,30 @@ procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssInstall then
   begin
-    // Clean up any stale legacy 32-bit uninstall registry entries so Control Panel displays v1.2.0 accurately
+    // Clean up any stale legacy 32-bit uninstall registry entries so Control Panel displays current version accurately
     RegDeleteKeyIncludingSubkeys(HKLM, 'Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\{5C1D829F-A62E-4D7A-93B4-29E7BC852891}_is1');
+  end;
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+var
+  AppDataDir: String;
+begin
+  if CurUninstallStep = usPostUninstall then
+  begin
+    AppDataDir := ExpandConstant('{userappdata}\BanglaProofreader');
+    if DirExists(AppDataDir) and (not UninstallSilent()) then
+    begin
+      if MsgBox(
+        'Do you want to KEEP your saved preferences and Gemini API Key for future installations?' + #13#10 + #13#10 +
+        '• Click "Yes" to KEEP your saved API Key and settings.' + #13#10 +
+        '• Click "No" to REMOVE all saved preferences and API Key permanently.',
+        mbConfirmation, MB_YESNO or MB_DEFBUTTON1
+      ) = IDNO then
+      begin
+        DelTree(AppDataDir, True, True, True);
+        RegDeleteValue(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Run', 'BanglaProofreader');
+      end;
+    end;
   end;
 end;

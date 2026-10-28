@@ -1,7 +1,7 @@
-# 🇧🇩 বাংলা প্রুফরিডার (Bangla Proofreader) — v1.4.0
+# 🇧🇩 বাংলা প্রুফরিডার (Bangla Proofreader) — v1.5.0
 
-> **AI Assisted Windows Desktop Utility for Bangla Proofreading, Bijoy-to-Unicode Conversion & Linguistic Correction**  
-> সিস্টেম-ওয়াইড গ্লোবাল শর্টকাট, অটোমেটিক বিজয়-টু-ইউনিকোড কনভার্টার, আরবি স্ক্রিপ্ট প্রোটেকশন এবং এআই-সহায়ক (AI Assisted) আধুনিক বাংলা প্রুফরিডার।
+> **AI Assisted Windows Desktop Utility for Bangla Proofreading, Offline Dictionary Spell Checking, Bijoy-to-Unicode Conversion & Linguistic Correction**  
+> সিস্টেম-ওয়াইড গ্লোবাল শর্টকাট, ১,৪০,০০০+ শব্দের অফলাইন ডিকশনারি স্পেল চেকার, অটোমেটিক বিজয়-টু-ইউনিকোড কনভার্টার, আরবি স্ক্রিপ্ট প্রোটেকশন এবং এআই-সহায়ক (AI Assisted) আধুনিক বাংলা প্রুফরিডার।
 
 ---
 
@@ -9,15 +9,18 @@
 
 সোর্স কোড ছাড়া সরাসরি উইন্ডোজে ব্যবহার করতে চাইলে নিচের লিংকে ক্লিক করে সরাসরি ইনস্টলারটি ডাউনলোড করুন:
 
-👉 **[⬇️ Download BanglaProofreader_Setup_v1.4.0.exe (Windows Installer)](https://github.com/direct2amin/Bangla-Proofreader/raw/main/releases/BanglaProofreader_Setup_v1.4.0.exe)**  
+👉 **[⬇️ Download BanglaProofreader_Setup_v1.5.0.exe (Windows Installer)](https://github.com/direct2amin/Bangla-Proofreader/raw/main/releases/BanglaProofreader_Setup_v1.5.0.exe)**  
 *(অথবা এই রিপোজিটরির **[Releases](https://github.com/direct2amin/Bangla-Proofreader/releases)** ও **[`releases/`](releases/)** ফোল্ডার থেকেও ডাউনলোড করতে পারবেন)*
 
 ---
 
 ## ✨ মূল বৈশিষ্ট্যসমূহ (Key Features)
 
+- **🔀 ডুয়াল প্রুফরিডিং মোড (Offline & Online AI Modes):**
+  - **Offline (Local Dictionary- Instant):** ইন্টারনেট বা API Key ছাড়াই ১,৪০,০০০+ শব্দের লোকাল ডিকশনারি ও Levenshtein Edit Distance ব্যবহার করে মিলিসেকেন্ডে তাৎক্ষণিক বানান সংশোধন।
+  - **Online AI (Gemini AI - Contextual):** Google Gemini AI সহায়তায় প্রাসঙ্গিক বানান, যুক্তাক্ষর ও ব্যাকরণগত শুদ্ধিকরণ।
 - **⚡ সিস্টেম-ওয়াইড গ্লোবাল শর্টকাট (Global Hotkey):** যেকোনো অ্যাপ্লিকেশন (Microsoft Word, Adobe Illustrator, Notepad, Browser) থেকে লেখা সিলেক্ট করে `Ctrl+Alt+B` (অথবা সেটিংস থেকে আপনার পছন্দমতো কাস্টম শর্টকাট) চাপলেই সরাসরি প্রুফরিডার চালু হয়।
-- **🔄 অটোমেটিক বিজয়-টু-ইউনিকোড কনভার্সন (Auto Bijoy-to-Unicode):** বিজয় (SutonnyMJ/ANSI) ফন্টের লেখা কপি বা পেস্ট করলে স্বয়ংক্রিয়ভাবে ইউনিকোডে রূপান্তর করে প্রুফরিড সম্পন্ন করে।
+- **🔄 অটোমেটিক বিজয়-টু-ইউনিকোড কনভার্সন (Auto Bijoy-to-Unicode):** বিজয় (SutonnyMJ/ANSI) ফন্টের লেখা কপি বা পেস্ট করলে ১০০% অফলাইনে স্বয়ংক্রিয়ভাবে ইউনিকোডে রূপান্তর করে প্রুফরিড সম্পন্ন করে।
 - **🕋 আরবি টেক্সট ও হরকত সুরক্ষা (Arabic Script Protection):** বাংলা লেখার ভেতরে কুরআনের আয়াত, হাদিস বা আরবি দোয়া থাকলে তার অক্ষর ও হরকত ১০০% অক্ষুণ্ণ রাখে।
 - **📍 বাংলাদেশের স্থাননাম অভিধান (BD Location Gazetteer):** বাংলাদেশের জেলা, উপজেলা, থানা, ইউনিয়ন ও পোস্ট অফিসের নামের বানান নির্ভুলভাবে যাচাই ও সংশোধন করে।
 - **🎨 পাশাপাশি ও ইনলাইন তুলনা (Visual Word-Level Diff):**

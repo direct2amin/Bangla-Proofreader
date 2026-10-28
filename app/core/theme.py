@@ -304,6 +304,29 @@ QMessageBox QPushButton:hover {{
     background-color: #475569;
     border-color: #64748b;
 }}
+
+QComboBox {{
+    background-color: #1e293b;
+    color: #f8fafc;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: "{font_family}";
+}}
+
+QComboBox:hover {{
+    border-color: #10b981;
+}}
+
+QComboBox QAbstractItemView {{
+    background-color: #1e293b;
+    color: #f8fafc;
+    selection-background-color: #064e3b;
+    selection-color: #34d399;
+    border: 1px solid #334155;
+}}
 """
     else:
         return f"""
@@ -559,6 +582,29 @@ QMessageBox QPushButton {{
 QMessageBox QPushButton:hover {{
     background-color: #e2e8f0;
     border-color: #94a3b8;
+}}
+
+QComboBox {{
+    background-color: #ffffff;
+    color: #0f172a;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: "{font_family}";
+}}
+
+QComboBox:hover {{
+    border-color: #0b663b;
+}}
+
+QComboBox QAbstractItemView {{
+    background-color: #ffffff;
+    color: #0f172a;
+    selection-background-color: #ecfdf5;
+    selection-color: #065f46;
+    border: 1px solid #cbd5e1;
 }}
 """
 

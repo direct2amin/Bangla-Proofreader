@@ -31,6 +31,9 @@ hiddenimports = [
     'app.utils.i18n',
     'app.utils.punctuation_formatter',
     'app.utils.bijoy_converter',
+    'app.utils.offline_checker',
+    'app.utils.bd_gazetteer',
+    'app.engines.offline_checker',
 ]
 
 # Collect all resources and schemas for google-genai

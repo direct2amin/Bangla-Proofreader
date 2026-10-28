@@ -93,3 +93,46 @@ def get_geo_reference_for_text(text: str) -> str:
         return ""
 
     return "\n<geo_reference>\n" + "\n".join(ref_lines) + "\n</geo_reference>"
+
+
+def apply_gazetteer_corrections(original: str, text: Optional[str] = None) -> str:
+    """Offline context-aware location spell-correction when a Bangladesh Thana/Upazila is present in text."""
+    target = text if text is not None else original
+    if not target or len(target) > 4000:
+        return target
+
+    data = _load_gazetteer()
+    thanas: Dict[str, Dict[str, Any]] = data.get("thanas", {})
+    if not thanas:
+        return target
+
+    norm_text = unicodedata.normalize("NFC", target)
+    matched_thanas: list[str] = [th for th in thanas if len(th) >= 3 and th in norm_text]
+    if not matched_thanas:
+        return target
+
+    # Gather local official place names for the matched Thana(s)
+    local_places: list[str] = []
+    for th in matched_thanas[:3]:
+        info = thanas[th]
+        for key in ("unions", "post_offices", "villages"):
+            for place in info.get(key, []):
+                if place and len(place) >= 3:
+                    local_places.append(unicodedata.normalize("NFC", place))
+
+    if not local_places:
+        return target
+
+    local_place_set = set(local_places)
+
+    def replace_place_token(m: re.Match) -> str:
+        w = m.group(0)
+        if len(w) < 3 or w in local_place_set:
+            return w
+        close = difflib.get_close_matches(w, local_places, n=1, cutoff=0.80)
+        if close and abs(len(close[0]) - len(w)) <= 2:
+            return close[0]
+        return w
+
+    return re.sub(r"[\u0980-\u09FF]{3,}", replace_place_token, norm_text)
+

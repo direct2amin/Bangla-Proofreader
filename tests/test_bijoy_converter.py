@@ -82,6 +82,7 @@ class TestBijoyConverter(unittest.TestCase):
         from app.core.engine_manager import EngineManager
 
         mgr = EngineManager()
+        mgr.mode = "online"
         mgr.gemini_engine = MagicMock()
         mgr.gemini_engine.is_available.return_value = True
         mgr.gemini_engine.proofread.return_value = "আমার সোনার বাংলা"
@@ -92,6 +93,34 @@ class TestBijoyConverter(unittest.TestCase):
         # Ensure the engine received converted Unicode, not raw Bijoy
         mgr.gemini_engine.proofread.assert_called_once_with("আমার সোনার বাংলা")
         self.assertEqual(result, "আমার সোনার বাংলা")
+
+    def test_jsx_ported_dictionaries_and_helpers(self):
+        from app.utils.bijoy_converter import (
+            preConversionMap,
+            conversionMap,
+            proConversionMap,
+            postConversionMap,
+            reph,
+            swapHalant,
+            swapRa,
+            preKars,
+            nukta,
+            convert,
+        )
+
+        self.assertIsInstance(preConversionMap, dict)
+        self.assertIsInstance(conversionMap, dict)
+        self.assertIsInstance(proConversionMap, dict)
+        self.assertIsInstance(postConversionMap, dict)
+
+        # Verify individual algorithmic helpers
+        self.assertEqual(reph("কর্"), "র্ক")
+        self.assertEqual(swapHalant("কা্ম"), "ক্মা")
+        self.assertEqual(swapRa("র্া"), "ার্")
+        self.assertEqual(preKars("েকা"), "কো")
+        self.assertEqual(preKars("েকৗ"), "কৌ")
+        self.assertEqual(nukta("ঁা"), "াঁ")
+        self.assertEqual(convert("Avgvi †mvbvi evsjv"), "আমার সোনার বাংলা")
 
 
 if __name__ == '__main__':

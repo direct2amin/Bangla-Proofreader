@@ -163,7 +163,7 @@ def _is_single_word_in_set(w: str, keyword_set: set[str]) -> bool:
     return False
 
 
-def is_arabic_word(original: str, corrected: str) -> bool:
+def is_arabic_word(original: str, corrected: str = "") -> bool:
     """Return True if original or corrected chunk is specifically an Arabic or Islamic loanword."""
     # If the text contains Arabic script (e.g. نحمده ونصلى, المتن)
     if re.search(r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]', original) or re.search(r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]', corrected):
@@ -179,7 +179,7 @@ def is_arabic_word(original: str, corrected: str) -> bool:
     return False
 
 
-def is_foreign_word(original: str, corrected: str) -> bool:
+def is_foreign_word(original: str, corrected: str = "") -> bool:
     """Return True if original or corrected chunk is an Arabic, Persian, English,
 
     or European foreign loanword that exhibits disputed spelling variants.

@@ -17,7 +17,7 @@ try:
         QTextEdit, QTextBrowser, QLabel, QPushButton,
         QTabWidget, QTableWidget, QTableWidgetItem, QHeaderView,
         QFrame, QStatusBar, QMessageBox, QApplication, QLineEdit,
-        QCheckBox, QProgressBar
+        QCheckBox, QProgressBar, QComboBox
     )
 except ImportError:
     from PySide6.QtCore import Qt, Signal, Slot, QTimer, QThread, QEvent
@@ -29,7 +29,7 @@ except ImportError:
         QTextEdit, QTextBrowser, QLabel, QPushButton,
         QTabWidget, QTableWidget, QTableWidgetItem, QHeaderView,
         QFrame, QStatusBar, QMessageBox, QApplication, QLineEdit,
-        QCheckBox, QProgressBar
+        QCheckBox, QProgressBar, QComboBox
     )
 
 from app.utils.diff_highlighter import DiffHighlighter, DiffResult, is_word
@@ -238,7 +238,23 @@ class DiffWindow(QMainWindow):
         self.clear_btn.clicked.connect(self.clear_all)
         toolbar_layout.addWidget(self.clear_btn)
 
-        toolbar_layout.addSpacing(16)
+        toolbar_layout.addSpacing(12)
+
+        # Mode Selector: Offline (Local Dictionary - Instant) vs Online AI (Gemini AI - Contextual)
+        self.mode_lbl = QLabel(t("mode_label", self.lang))
+        self.mode_lbl.setStyleSheet("font-weight: 600; color: #475569; font-size: 13px;")
+        toolbar_layout.addWidget(self.mode_lbl)
+
+        self.mode_combo = QComboBox()
+        self.mode_combo.setMinimumWidth(260)
+        self.mode_combo.addItem(t("mode_offline", self.lang), "offline")
+        self.mode_combo.addItem(t("mode_online", self.lang), "online")
+        active_mode = self.engine_manager.get_mode()
+        self.mode_combo.setCurrentIndex(0 if active_mode == "offline" else 1)
+        self.mode_combo.currentIndexChanged.connect(self.on_mode_changed)
+        toolbar_layout.addWidget(self.mode_combo)
+
+        toolbar_layout.addSpacing(12)
 
         # Progress bar (hidden by default)
         self.progress_bar = QProgressBar()
@@ -469,6 +485,12 @@ class DiffWindow(QMainWindow):
         self.settings_btn.setText(f"⚙ {t('settings_btn', lang)}")
         self.about_btn.setText(t("about_btn", lang))
         self.zoom_lbl.setText(t("zoom_label", lang))
+        self.mode_lbl.setText(t("mode_label", lang))
+
+        self.mode_combo.blockSignals(True)
+        self.mode_combo.setItemText(0, t("mode_offline", lang))
+        self.mode_combo.setItemText(1, t("mode_online", lang))
+        self.mode_combo.blockSignals(False)
 
         if lang == "en":
             self.lang_btn.setText("🌐 English")
@@ -535,6 +557,7 @@ class DiffWindow(QMainWindow):
         if is_dark:
             self.api_lbl.setStyleSheet("font-weight: 600; color: #94a3b8;")
             self.zoom_lbl.setStyleSheet("font-weight: 600; color: #94a3b8; font-size: 13px;")
+            self.mode_lbl.setStyleSheet("font-weight: 600; color: #94a3b8; font-size: 13px;")
             self.orig_header.setStyleSheet("font-weight: bold; color: #f87171;")
             self.corr_header.setStyleSheet("font-weight: bold; color: #4ade80;")
             self.inline_header.setStyleSheet("font-weight: bold; color: #cbd5e1;")
@@ -546,6 +569,7 @@ class DiffWindow(QMainWindow):
         else:
             self.api_lbl.setStyleSheet("font-weight: 600; color: #475569;")
             self.zoom_lbl.setStyleSheet("font-weight: 600; color: #475569; font-size: 13px;")
+            self.mode_lbl.setStyleSheet("font-weight: 600; color: #475569; font-size: 13px;")
             self.orig_header.setStyleSheet("font-weight: bold; color: #dc2626;")
             self.corr_header.setStyleSheet("font-weight: bold; color: #16a34a;")
             self.inline_header.setStyleSheet("font-weight: bold; color: #334155;")
@@ -554,6 +578,14 @@ class DiffWindow(QMainWindow):
             self.shortcut_status_label.setStyleSheet("color: #334155; font-weight: 600; font-size: 12.5px;")
             self.feedback_label.setStyleSheet("color: #16a34a; font-weight: 600; padding-right: 10px;")
             self.progress_log_lbl.setStyleSheet("color: #2563eb; font-weight: 600; font-size: 13px;")
+
+    def on_mode_changed(self, _index: int = 0):
+        """Handle switching between Offline (Local Dictionary) and Online AI (Gemini) modes."""
+        selected_mode = self.mode_combo.currentData() or "online"
+        self.engine_manager.set_mode(selected_mode)
+        self.update_api_status_banner()
+        if self._get_orig_plain_text().strip():
+            self.run_proofread()
 
     def open_api_guide(self):
         """Show API key instructions dialog."""
@@ -566,9 +598,21 @@ class DiffWindow(QMainWindow):
         dialog.exec()
 
     def update_api_status_banner(self):
-        """Update top banner based on API key validity and active theme."""
+        """Update top banner based on active mode, API key validity, and active theme."""
         is_dark = (self.effective_theme == "dark")
-        if self.engine_manager.is_gemini_available():
+        if self.engine_manager.get_mode() == "offline":
+            self.status_banner.setText(t("offline_ready", self.lang))
+            if is_dark:
+                self.status_banner.setStyleSheet(
+                    "background-color: #064e3b; color: #6ee7b7; border: 1px solid #047857; "
+                    "border-radius: 6px; padding: 6px 12px; font-size: 13px; font-weight: 500;"
+                )
+            else:
+                self.status_banner.setStyleSheet(
+                    "background-color: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; "
+                    "border-radius: 6px; padding: 6px 12px; font-size: 13px; font-weight: 500;"
+                )
+        elif self.engine_manager.is_gemini_available():
             self.status_banner.setText(t("api_ready", self.lang))
             if is_dark:
                 self.status_banner.setStyleSheet(
@@ -679,9 +723,19 @@ class DiffWindow(QMainWindow):
         self.replace_btn.setEnabled(enabled)
         self.save_key_btn.setEnabled(enabled)
         self.lang_btn.setEnabled(enabled)
+        self.mode_combo.setEnabled(enabled)
+
+    def switch_to_offline_automatically(self):
+        """Automatically switch to Offline Mode when internet is disconnected, until user manually switches back."""
+        self.engine_manager.set_mode("offline")
+        self.mode_combo.blockSignals(True)
+        self.mode_combo.setCurrentIndex(0)
+        self.mode_combo.blockSignals(False)
+        self.update_api_status_banner()
+        self.show_feedback(t("auto_offline_feedback", self.lang))
 
     def run_proofread(self):
-        """Execute proofreading asynchronously in a background thread."""
+        """Execute proofreading in Offline (Instant) or Online AI (Gemini) mode."""
         original_text = self._get_orig_plain_text().strip()
         if not original_text:
             self.stats_label.setText(t("no_input_warn", self.lang))
@@ -694,6 +748,24 @@ class DiffWindow(QMainWindow):
             logger.info("Bijoy/SutonnyMJ text detected in input editor. Auto-converting to Unicode...")
             original_text = convert_bijoy_to_unicode(original_text)
             self._set_orig_plain_text(original_text)
+
+        active_mode = self.engine_manager.get_mode()
+        if active_mode == "online" and not self.engine_manager.is_internet_available():
+            logger.info("No internet connection detected during online proofread. Auto-switching to Offline Mode.")
+            self.switch_to_offline_automatically()
+            active_mode = "offline"
+
+        if active_mode == "offline":
+            try:
+                corrected_text = self.engine_manager.proofread(original_text, mode="offline")
+                diff_result = DiffHighlighter.compute_diff(
+                    original_text, corrected_text, is_dark=(self.effective_theme == "dark")
+                )
+                self.on_worker_finished(corrected_text, diff_result)
+            except Exception as e:
+                logger.error("Offline proofread error: %s", e)
+                self.on_worker_error(str(e))
+            return
 
         if not self.engine_manager.is_gemini_available():
             show_themed_message_box(
@@ -760,6 +832,22 @@ class DiffWindow(QMainWindow):
         self.progress_log_lbl.setText("")
         self.set_actions_enabled(True)
         self.update_shortcut_status()
+
+        err_lower = str(err_msg).lower()
+        if any(k in err_lower for k in (
+            "connection", "timeout", "network", "socket", "getaddrinfo",
+            "nameresolutionerror", "failed to establish a new connection"
+        )):
+            logger.info("Network error during online proofread (%s). Auto-switching to Offline Mode.", err_msg)
+            self.switch_to_offline_automatically()
+            original_text = self._get_orig_plain_text().strip()
+            if original_text:
+                corrected_text = self.engine_manager.proofread(original_text, mode="offline")
+                diff_result = DiffHighlighter.compute_diff(
+                    original_text, corrected_text, is_dark=(self.effective_theme == "dark")
+                )
+                self.on_worker_finished(corrected_text, diff_result)
+            return
 
         formatted_msg = format_gemini_error(err_msg, self.lang)
         show_themed_message_box(
