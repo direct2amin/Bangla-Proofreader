@@ -101,8 +101,13 @@ ISLAMIC_AND_CULTURAL_VOCAB: Set[str] = {
         "জুমুআ", "জুমা", "জুমার", "জুমআ", "জুমআর", "ঈদ", "ঈদের", "রমজান", "রমযান", "রমজানের",
         "শাবান", "রজব", "মহররম", "শাওয়াল", "জিলহজ", "জিলকদ",
         "আব্দুল্লাহ", "মুফাসসিরিন", "নিয়ত", "নিয়তের", "নিয়াত", "আহলে", "মুহাক্কিক", "মুহাক্কিকিন",
-        "সালাফি", "দেওবন্দি", "কওমি", "খাদেম", "খাদেমের", "মুহতামিম", "মুহতামিমের",
+        "সালাফি", "দেওবন্দি", "দেওবন্দী", "কওমি", "খাদেম", "খাদেমের", "মুহতামিম", "মুহতামিমের",
         "ওয়াকফ", "ওয়াকফের", "সায়িম", "মুত্তাকি", "মুত্তাকির", "শাকের", "শাকেরের", "সাকের", "সাকেরের",
+        "মাদানি", "মাদানী", "আসমানি", "আসমানী", "উত্তরসূরি", "উত্তরসূরী", "বিধানাবলি", "বিধানাবলী",
+        "উপরোক্ত", "উপরোক্তটি", "উপরোক্তগুলো", "উপরোক্তদের",
+        "পূজারি", "পূজারী", "ভিখারি", "ভিখারী", "সোনালি", "সোনালী", "রূপালি", "রূপালী",
+        "তরকারি", "তরকারী", "সরকারি", "সরকারী", "বেসরকারি", "বেসরকারী", "দাবি", "দাবী",
+        "বাড়ি", "বাড়ী", "গাড়ি", "গাড়ী", "শাড়ি", "শাড়ী",
     ]
 }
 
@@ -302,7 +307,14 @@ DIRECT_CORRECTIONS: Dict[str, str] = {
         "সৌজন্যতা": "সৌজন্য",
         "স্বাক্ষরতা": "সাক্ষরতা",
         "সমিপেষু": "সমীপেষু",
-        "উপরোক্ত": "উপর্যুক্ত",
+        "পার্শে": "পার্শ্বে",
+        "পার্শের": "পার্শ্বের",
+        "পারশে": "পার্শ্বে",
+        "পারশের": "পার্শ্বের",
+        "পার্শ": "পার্শ্ব",
+        "পারশ": "পার্শ্ব",
+        "পার্শবর্তী": "পার্শ্ববর্তী",
+        "পারশবর্তী": "পার্শ্ববর্তী",
         "ঐক্যমত": "ঐকমত্য",
         "ঐক্যমত্য": "ঐকমত্য",
         "স্বস্ত্রীক": "সস্ত্রীক",
@@ -571,6 +583,15 @@ class OfflineSpellChecker:
                     return False
         if s in self.word_set or s in ISLAMIC_AND_CULTURAL_VOCAB:
             return True
+        # Accept established traditional -ী / -ি interchangeable spellings if base root exists
+        if s.endswith("ী") and len(s) >= 3:
+            cand = s[:-1] + "ি"
+            if (cand in self.word_set or cand in ISLAMIC_AND_CULTURAL_VOCAB) and s not in DIRECT_CORRECTIONS:
+                return True
+        elif s.endswith("ি") and len(s) >= 3:
+            cand = s[:-1] + "ী"
+            if (cand in self.word_set or cand in ISLAMIC_AND_CULTURAL_VOCAB) and s not in DIRECT_CORRECTIONS:
+                return True
         if is_arabic_word(s, s) or is_foreign_word(s, s):
             return True
         return False
@@ -809,12 +830,7 @@ class OfflineSpellChecker:
             # If the stem is an explicit known misspelling
             if stem in DIRECT_CORRECTIONS:
                 return DIRECT_CORRECTIONS[stem] + suf
-            # Standard Bangla Academy -ী -> -ি rule for modern non-tatsama words
-            if stem.endswith("ী"):
-                cand_stem = stem[:-1] + "ি"
-                if self.is_root_valid(cand_stem):
-                    return cand_stem + suf
-            # If stem is already valid, preserve the original inflected word untouched
+            # If stem is already valid (including traditional -ী forms), preserve original inflected word untouched
             if self.is_root_valid(stem):
                 return word
 
@@ -824,20 +840,10 @@ class OfflineSpellChecker:
                 short_stem = w[:-len(alt_suf)]
                 if short_stem in DIRECT_CORRECTIONS:
                     return DIRECT_CORRECTIONS[short_stem] + alt_suf
-                if short_stem.endswith("ী"):
-                    cand_stem = short_stem[:-1] + "ি"
-                    if self.is_root_valid(cand_stem):
-                        return cand_stem + alt_suf
                 if self.is_root_valid(short_stem):
                     return word
 
-        # 5. Whole-word standard Bangla Academy -ী -> -ি rule
-        if w.endswith("ী"):
-            cand = w[:-1] + "ি"
-            if self.is_root_valid(cand):
-                return cand
-
-        # 6. Conservative Single-Character Orthographic Typo Check:
+        # 5. Conservative Single-Character Orthographic Typo Check:
         # ONLY apply if the candidate has the EXACT same consonant skeleton (phonetic_key),
         # Levenshtein distance is strictly 1, word length >= 4,
         # AND candidate is a very frequent dictionary root (rank < 50000).

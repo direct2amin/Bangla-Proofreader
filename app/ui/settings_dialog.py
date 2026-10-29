@@ -223,6 +223,33 @@ class SettingsDialog(QDialog):
         key_row.addWidget(self.save_key_btn)
 
         gemini_layout.addLayout(key_row)
+
+        # AI Model Selection row with Live Refresh
+        model_row = QHBoxLayout()
+        model_lbl = QLabel(t("settings_model_label", self.lang))
+        model_lbl.setFixedWidth(70)
+
+        self.model_combo = QComboBox()
+        cur_model = self.config.get("gemini_model", "gemini-3.5-flash-lite")
+        from app.core.config import CURATED_GEMINI_MODELS
+        for m_id, m_label in CURATED_GEMINI_MODELS:
+            self.model_combo.addItem(m_label, m_id)
+
+        idx = self.model_combo.findData(cur_model)
+        if idx != -1:
+            self.model_combo.setCurrentIndex(idx)
+        else:
+            self.model_combo.addItem(cur_model, cur_model)
+            self.model_combo.setCurrentIndex(self.model_combo.count() - 1)
+
+        self.refresh_models_btn = QPushButton(t("refresh_models_btn", self.lang))
+        self.refresh_models_btn.clicked.connect(self.refresh_live_models)
+
+        model_row.addWidget(model_lbl)
+        model_row.addWidget(self.model_combo)
+        model_row.addWidget(self.refresh_models_btn)
+
+        gemini_layout.addLayout(model_row)
         layout.addWidget(gemini_group)
 
         # 2. Shortcuts, System Tray & Windows Autostart Group
@@ -310,11 +337,61 @@ class SettingsDialog(QDialog):
                 effective_theme=self.effective_theme,
             )
 
+    def refresh_live_models(self):
+        """Fetch active models supporting generateContent directly from Google Gemini server."""
+        key = self.gemini_key_edit.text().strip() or self.config.get("gemini_api_key", "")
+        if not key:
+            show_themed_message_box(
+                self,
+                "warning",
+                "Gemini API Key Required",
+                t("api_missing", self.lang),
+                effective_theme=self.effective_theme,
+            )
+            return
+
+        try:
+            from google import genai
+            client = genai.Client(api_key=key)
+            live_models = [m.name.replace("models/", "") for m in client.models.list() if "generateContent" in m.supported_actions]
+            flash_models = [m for m in live_models if "flash" in m and not m.endswith("-tts")]
+            if flash_models:
+                cur = self.model_combo.currentData()
+                self.model_combo.clear()
+                from app.core.config import CURATED_GEMINI_MODELS
+                curated_dict = dict(CURATED_GEMINI_MODELS)
+                for m in flash_models:
+                    lbl = curated_dict.get(m, f"{m} (Live)")
+                    self.model_combo.addItem(lbl, m)
+                idx = self.model_combo.findData(cur)
+                if idx != -1:
+                    self.model_combo.setCurrentIndex(idx)
+                else:
+                    self.model_combo.setCurrentIndex(0)
+
+                show_themed_message_box(
+                    self,
+                    "information",
+                    "Models Refreshed",
+                    t("models_refreshed_msg", self.lang),
+                    effective_theme=self.effective_theme,
+                )
+        except Exception as e:
+            show_themed_message_box(
+                self,
+                "warning",
+                "Error Refreshing Models",
+                f"Could not connect to Google Gemini server: {e}",
+                effective_theme=self.effective_theme,
+            )
+
     def save_settings(self):
         """Save settings and apply Windows registry autostart."""
         self.config["theme"] = self.theme_combo.currentData()
         self.config["engine"] = "gemini"
         self.config["gemini_api_key"] = self.gemini_key_edit.text().strip()
+        if hasattr(self, "model_combo"):
+            self.config["gemini_model"] = self.model_combo.currentData()
         sc = self.shortcut_combo.currentData()
         if sc not in ("ctrl+alt+b", "ctrl+alt+z", "ctrl+alt+x"):
             sc = "ctrl+alt+b"

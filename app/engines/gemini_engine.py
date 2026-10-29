@@ -180,7 +180,7 @@ def preserve_line_structure(original: str, corrected: str) -> str:
 class GeminiProofreaderEngine:
     """AI Assisted proofreading engine using Google Gemini API with ultra-fast Flash models."""
 
-    def __init__(self, api_key: Optional[str] = None, model_name: str = "gemini-2.5-flash"):
+    def __init__(self, api_key: Optional[str] = None, model_name: str = "gemini-3.5-flash-lite"):
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY", "")
         self.model_name = model_name
         self.client = None
@@ -260,15 +260,17 @@ class GeminiProofreaderEngine:
         geo_ref = get_geo_reference_for_text(text)
         wrapped_payload = f"<text_to_proofread>\n{text}\n</text_to_proofread>{geo_ref}"
 
-        user_model = self.model_name
-        if user_model in ("gemini-3.5-flash-lite", "gemini-flash-lite-latest", "gemini-3.1-flash-lite", "gemini-3.5-flash", "gemini-flash-latest", "gemini-3.8-flash", None):
-            user_model = "gemini-2.5-flash"
+        user_model = self.model_name or "gemini-3.5-flash-lite"
+        if user_model in ("gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-2.5-pro", "gemini-1.5-pro", None):
+            user_model = "gemini-3.5-flash-lite"
 
         models_to_try = list(dict.fromkeys([
             user_model,
-            "gemini-2.5-flash",
-            "gemini-2.0-flash",
-            "gemini-1.5-flash",
+            "gemini-3.5-flash-lite",
+            "gemini-flash-lite-latest",
+            "gemini-3.5-flash",
+            "gemini-flash-latest",
+            "gemini-3.1-flash-lite",
         ]))
         last_error = None
         quota_or_auth_error = None
@@ -282,9 +284,9 @@ class GeminiProofreaderEngine:
 
                 if genai_types:
                     thinking_cfg = None
-                    if hasattr(genai_types, "ThinkingConfig"):
+                    # Lite models do not support thinking_config; only apply thinking_budget=0 on non-lite models
+                    if "lite" not in model.lower() and hasattr(genai_types, "ThinkingConfig"):
                         try:
-                            # thinking_budget=0 turns off reasoning tokens for instant low-latency response
                             thinking_cfg = genai_types.ThinkingConfig(thinking_budget=0)
                         except Exception:
                             try:
@@ -336,6 +338,19 @@ class GeminiProofreaderEngine:
                         corrected = retry_cleaned
 
                 if corrected and not is_conversational_hallucination(text, corrected):
+                    # Auto-heal: If fallback to a different model succeeded because primary failed,
+                    # automatically update user config to this working model so future calls don't repeat the error!
+                    if model != self.model_name:
+                        logger.info("Auto-healing: Updating primary model from %s to active working %s", self.model_name, model)
+                        self.model_name = model
+                        try:
+                            from app.core.config import load_config, save_config
+                            cfg = load_config()
+                            cfg["gemini_model"] = model
+                            save_config(cfg)
+                        except Exception:
+                            pass
+
                     # Repair any accidental hybrid script (Arabic+Bengali) corruption
                     corrected = sanitize_arabic_and_hybrid_tokens(text, corrected)
                     corrected = unicodedata.normalize('NFC', corrected)

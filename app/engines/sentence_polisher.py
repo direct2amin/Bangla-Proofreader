@@ -94,15 +94,17 @@ class SentencePolisher:
         if not self.client:
             raise RuntimeError("Gemini API Key is not configured. Please enter your API key in Settings.")
 
-        model_name = config.get("gemini_model", "gemini-2.5-flash")
-        if model_name in ("gemini-3.5-flash-lite", "gemini-flash-lite-latest", "gemini-3.1-flash-lite", "gemini-3.5-flash", "gemini-flash-latest", "gemini-3.8-flash", None):
-            model_name = "gemini-2.5-flash"
+        model_name = config.get("gemini_model", "gemini-3.5-flash-lite")
+        if model_name in ("gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-2.5-pro", "gemini-1.5-pro", None):
+            model_name = "gemini-3.5-flash-lite"
 
         candidate_models = list(dict.fromkeys([
             model_name,
-            "gemini-2.5-flash",
-            "gemini-2.0-flash",
-            "gemini-1.5-flash",
+            "gemini-3.5-flash-lite",
+            "gemini-flash-lite-latest",
+            "gemini-3.5-flash",
+            "gemini-flash-latest",
+            "gemini-3.1-flash-lite",
         ]))
 
         prompt = (
@@ -115,7 +117,8 @@ class SentencePolisher:
         for cand_model in candidate_models:
             try:
                 thinking_cfg = None
-                if genai_types and hasattr(genai_types, "ThinkingConfig"):
+                # Lite models do not support thinking_config; only apply thinking_budget=0 on non-lite models
+                if "lite" not in cand_model.lower() and genai_types and hasattr(genai_types, "ThinkingConfig"):
                     try:
                         thinking_cfg = genai_types.ThinkingConfig(thinking_budget=0)
                     except Exception:

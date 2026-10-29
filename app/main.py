@@ -155,6 +155,7 @@ class CaptureWorker(QThread):
 class QuickConvertWorker(QThread):
     """Dedicated background worker to capture Bijoy text, convert to Unicode offline, and replace in active app with NO window."""
     conversion_finished = Signal(bool, int)
+    already_unicode = Signal()
 
     def run(self):
         try:
@@ -165,8 +166,14 @@ class QuickConvertWorker(QThread):
                 self.conversion_finished.emit(False, 0)
                 return
 
+            from app.utils.bijoy_converter import is_unicode_bengali_text, convert_bijoy_to_unicode
+            if is_unicode_bengali_text(captured):
+                logger.info("QuickConvertWorker: Captured text is already in standard Unicode. Skipping conversion to prevent corruption.")
+                self.already_unicode.emit()
+                self.conversion_finished.emit(False, -1)
+                return
+
             logger.info("QuickConvertWorker: Captured %d characters. Converting Bijoy to Unicode offline...", len(captured))
-            from app.utils.bijoy_converter import convert_bijoy_to_unicode
             unicode_text = convert_bijoy_to_unicode(captured)
 
             logger.info("QuickConvertWorker: Injecting converted text into active application...")
@@ -302,7 +309,20 @@ class BanglaProofreaderApp:
 
         self.quick_convert_worker = QuickConvertWorker()
         self.quick_convert_worker.conversion_finished.connect(self.on_quick_convert_finished)
+        self.quick_convert_worker.already_unicode.connect(self.on_quick_convert_already_unicode)
         self.quick_convert_worker.start()
+
+    def on_quick_convert_already_unicode(self):
+        """Show informative dialog when user presses Ctrl+Alt+C on text that is already in Unicode."""
+        logger.info("Selected text is already in Unicode. Displaying safety notification dialog.")
+        from app.core.theme import show_themed_message_box
+        show_themed_message_box(
+            self.diff_window,
+            "information",
+            t("unicode_already_detected_title", self.diff_window.lang),
+            t("unicode_already_detected_msg", self.diff_window.lang),
+            effective_theme=self.diff_window.effective_theme,
+        )
 
     def on_quick_convert_finished(self, success: bool, char_count: int):
         if success:

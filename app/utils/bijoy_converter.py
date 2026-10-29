@@ -499,8 +499,23 @@ def convert(s: str) -> str:
     return text
 
 
+def is_unicode_bengali_text(text: str) -> bool:
+    """Check if the text already contains standard Unicode Bengali script."""
+    if not text:
+        return False
+    return bool(re.search(r'[\u0985-\u09FA\u09CE\u09BE-\u09CC]', text))
+
+
 def convert_bijoy_to_unicode(text: str) -> str:
-    """Convert Bijoy/SutonnyMJ text to Unicode with Arabic script and URL/email protection."""
+    """Convert Bijoy/SutonnyMJ text to Unicode with Arabic script and URL/email protection.
+
+    If text is already standard Unicode Bengali, returns original text untouched
+    to strictly prevent mangling or distorting already-converted characters.
+    """
+    if not text:
+        return text
+    if is_unicode_bengali_text(text):
+        return text
     return convert(text)
 
 

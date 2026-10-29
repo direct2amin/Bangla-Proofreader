@@ -29,7 +29,7 @@ CONFIG_FILE = get_config_file_path()
 
 DEFAULT_CONFIG: Dict[str, Any] = {
     "gemini_api_key": os.environ.get("GEMINI_API_KEY", ""),
-    "gemini_model": "gemini-2.5-flash",
+    "gemini_model": "gemini-3.5-flash-lite",
     "shortcut": "ctrl+alt+b",
     "quick_convert_enabled": True,
     "auto_paste": True,
@@ -40,6 +40,15 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "theme": "system",
     "proofread_mode": "online",
 }
+
+
+CURATED_GEMINI_MODELS = [
+    ("gemini-3.5-flash-lite", "gemini-3.5-flash-lite (Ultra-fast ~0.8s - Recommended)"),
+    ("gemini-flash-lite-latest", "gemini-flash-lite-latest (Auto-Updating Lite)"),
+    ("gemini-3.5-flash", "gemini-3.5-flash (High Accuracy ~3s)"),
+    ("gemini-flash-latest", "gemini-flash-latest (Auto-Updating Standard)"),
+    ("gemini-3.1-flash-lite", "gemini-3.1-flash-lite (Lightweight Fallback)"),
+]
 
 
 def load_config() -> Dict[str, Any]:
@@ -72,12 +81,12 @@ def load_config() -> Dict[str, Any]:
         except Exception:
             pass
 
-    # Ensure model is updated to official ultra-fast gemini-2.5-flash if invalid or legacy model is saved
+    # Automatically migrate retired legacy models (e.g. 2.5, 2.0, 1.5) to active gemini-3.5-flash-lite
     if config.get("gemini_model") in (
-        "gemini-3.5-flash-lite", "gemini-flash-lite-latest", "gemini-3.1-flash-lite",
-        "gemini-3.5-flash", "gemini-flash-latest", "gemini-3.8-flash", None
+        "gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash",
+        "gemini-2.5-pro", "gemini-1.5-pro", None
     ):
-        config["gemini_model"] = "gemini-2.5-flash"
+        config["gemini_model"] = "gemini-3.5-flash-lite"
 
     # Ensure main shortcut does not clash with dedicated quick-convert shortcut (Ctrl+Alt+C)
     if config.get("shortcut", "").strip().lower() == "ctrl+alt+c":

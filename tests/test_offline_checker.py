@@ -181,7 +181,26 @@ class TestOfflineCheckerAndModeSwitcher(unittest.TestCase):
         """Verify Gemini engine uses official fast models and does not use non-existent models."""
         from app.engines.gemini_engine import GeminiProofreaderEngine
         engine = GeminiProofreaderEngine(api_key="test-key")
-        self.assertEqual(engine.model_name, "gemini-2.5-flash")
+        self.assertEqual(engine.model_name, "gemini-3.5-flash-lite")
+
+    def test_parshe_corrected_to_parshwe_not_purse(self):
+        """Verify 'পার্শে' is accurately corrected to 'পার্শ্বে' and never to 'পার্সে'."""
+        self.assertEqual(self.checker.correct_word("পার্শে"), "পার্শ্বে")
+        self.assertEqual(self.checker.suggest("পার্শে"), ["পার্শ্বে"])
+        self.assertNotIn("পার্সে", self.checker.suggest("পার্শে"))
+
+    def test_traditional_ee_kar_and_uporokto_preserved(self):
+        """Verify traditional -ী spellings (দেওবন্দী, মাদানী, আসমানী, উত্তরসূরী, বিধানাবলী) and উপরোক্ত are preserved."""
+        for w in ["দেওবন্দী", "দেওবন্দি", "মাদানী", "মাদানি", "আসমানী", "আসমানি", "উত্তরসূরী", "উত্তরসূরি", "বিধানাবলী", "বিধানাবলি", "উপরোক্ত", "উপর্যুক্ত"]:
+            self.assertTrue(self.checker.is_valid_word(w), f"Word '{w}' was unexpectedly marked invalid")
+            self.assertEqual(self.checker.correct_word(w), w, f"Word '{w}' was unexpectedly modified to '{self.checker.correct_word(w)}'")
+
+    def test_bijoy_converter_protects_unicode_text(self):
+        """Verify convert_bijoy_to_unicode leaves Unicode text 100% untouched to prevent character corruption."""
+        from app.utils.bijoy_converter import convert_bijoy_to_unicode, is_unicode_bengali_text
+        unicode_sample = "সহপাঠীদের সাথে কাটানো সোনালী স্মৃতিগুলো হৃদয়ে গেঁথে থাকবে।"
+        self.assertTrue(is_unicode_bengali_text(unicode_sample))
+        self.assertEqual(convert_bijoy_to_unicode(unicode_sample), unicode_sample)
 
     def test_progress_bar_in_status_bar_not_toolbar(self):
         """Verify progress bar and label are placed in bottom status bar, avoiding toolbar collision."""
