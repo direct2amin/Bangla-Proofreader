@@ -8,7 +8,7 @@ from typing import Dict, Any
 
 from app.core.assets import get_asset_path
 
-BANGLA_FONT = 'Hind Siliguri", "Nirmala UI", "Segoe UI", sans-serif'
+BANGLA_FONT = "Nirmala UI"
 
 
 def get_checkmark_icon_path() -> str:
@@ -123,7 +123,8 @@ QTabBar::tab {{
 QTabBar::tab:selected {{
     background: #1e293b;
     color: #34d399;
-    border-bottom: 2px solid #10b981;
+    border-bottom: 3px solid #10b981;
+    font-weight: bold;
 }}
 
 QTextEdit, QTextBrowser {{
@@ -174,18 +175,18 @@ QPushButton:disabled {{
     border-color: #334155;
 }}
 
-QPushButton#PrimaryBtn {{
+QPushButton#PrimaryBtn, QPushButton#SaveKeyBtn, QPushButton#SaveBtn {{
     background-color: #0b663b;
     color: #ffffff;
     border: none;
     font-weight: bold;
 }}
 
-QPushButton#PrimaryBtn:hover {{
+QPushButton#PrimaryBtn:hover, QPushButton#SaveKeyBtn:hover, QPushButton#SaveBtn:hover {{
     background-color: #059669;
 }}
 
-QPushButton#PrimaryBtn:disabled {{
+QPushButton#PrimaryBtn:disabled, QPushButton#SaveKeyBtn:disabled, QPushButton#SaveBtn:disabled {{
     background-color: #064e3b;
     color: #6ee7b7;
 }}
@@ -445,7 +446,8 @@ QTabBar::tab {{
 QTabBar::tab:selected {{
     background: #ffffff;
     color: #0b663b;
-    border-bottom: 2px solid #0b663b;
+    border-bottom: 3px solid #0b663b;
+    font-weight: bold;
 }}
 
 QTextEdit, QTextBrowser {{
@@ -496,18 +498,18 @@ QPushButton:disabled {{
     border-color: #cbd5e1;
 }}
 
-QPushButton#PrimaryBtn {{
+QPushButton#PrimaryBtn, QPushButton#SaveKeyBtn, QPushButton#SaveBtn {{
     background-color: #0b663b;
     color: #ffffff;
     border: none;
     font-weight: bold;
 }}
 
-QPushButton#PrimaryBtn:hover {{
+QPushButton#PrimaryBtn:hover, QPushButton#SaveKeyBtn:hover, QPushButton#SaveBtn:hover {{
     background-color: #08502e;
 }}
 
-QPushButton#PrimaryBtn:disabled {{
+QPushButton#PrimaryBtn:disabled, QPushButton#SaveKeyBtn:disabled, QPushButton#SaveBtn:disabled {{
     background-color: #a7f3d0;
     color: #ffffff;
 }}

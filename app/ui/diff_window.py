@@ -55,9 +55,9 @@ from app.core.assets import get_asset_path
 
 logger = logging.getLogger(__name__)
 
-UI_FONT_FAMILY = "Hind Siliguri"
+UI_FONT_FAMILY = "Nirmala UI"
 TEXT_FIELD_FONT_FAMILY = "Bornomala Trio"
-BANGLA_FONT = 'Hind Siliguri", "Nirmala UI", "Segoe UI", sans-serif'
+BANGLA_FONT = "Nirmala UI"
 LOGO_BANNER_PATH = get_asset_path("logo_banner.png")
 LOGO_ICON_PATH = get_asset_path("logo_icon.png")
 LOGO_ICO_PATH = get_asset_path("logo.ico")
@@ -66,9 +66,9 @@ WINDOW_STYLESHEET = get_window_stylesheet("light", BANGLA_FONT)
 
 
 def create_ui_font(size: int = 10, weight: QFont.Weight = QFont.Weight.Normal) -> QFont:
-    """Create QFont for System UI controls (buttons, tabs, headers, status) using Hind Siliguri."""
+    """Create QFont for System UI controls using native Windows Segoe UI / Nirmala UI."""
     f = QFont()
-    f.setFamilies([UI_FONT_FAMILY, "Nirmala UI", "Segoe UI", "sans-serif"])
+    f.setFamilies([UI_FONT_FAMILY, "Segoe UI", "sans-serif"])
     f.setPointSize(size)
     f.setWeight(weight)
     return f
@@ -77,7 +77,7 @@ def create_ui_font(size: int = 10, weight: QFont.Weight = QFont.Weight.Normal) -
 def create_editor_font(size: int = 14) -> QFont:
     """Create dedicated QFont for Text Fields (Input, Output, Diff) using Bornomala Trio (Bangla, Arabic, English)."""
     f = QFont()
-    f.setFamilies([TEXT_FIELD_FONT_FAMILY, UI_FONT_FAMILY, "Nirmala UI", "sans-serif"])
+    f.setFamilies([TEXT_FIELD_FONT_FAMILY, UI_FONT_FAMILY, "Segoe UI", "sans-serif"])
     f.setPointSize(size)
     return f
 
@@ -256,6 +256,7 @@ class DiffWindow(QMainWindow):
         self.api_key_input.setFixedWidth(240)
 
         self.save_key_btn = QPushButton()
+        self.save_key_btn.setObjectName("SaveKeyBtn")
         self.save_key_btn.clicked.connect(self.save_api_key)
 
         api_row.addWidget(self.api_lbl)

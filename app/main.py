@@ -87,8 +87,8 @@ def load_application_fonts() -> tuple[str, str]:
                     logger.info("Successfully loaded application font: %s from %s", fams, p)
                 loaded_paths.add(p)
 
-    ui_font = "Hind Siliguri" if "Hind Siliguri" in loaded_families else "Nirmala UI"
-    text_font = "Bornomala Trio" if "Bornomala Trio" in loaded_families else "Hind Siliguri"
+    ui_font = "Nirmala UI"
+    text_font = "Bornomala Trio" if "Bornomala Trio" in loaded_families else "Nirmala UI"
     logger.info("System UI font: '%s' | Text fields font: '%s'", ui_font, text_font)
     return ui_font, text_font
 
@@ -417,10 +417,10 @@ def main():
     app = QApplication(sys.argv)
     app.setApplicationName("Bangla Proofreader")
 
-    # Load embedded fonts: Hind Siliguri (System UI) & Bornomala Trio (Text Fields)
+    # Load embedded fonts: Nirmala UI / Segoe UI (System UI) & Bornomala Trio (Text Fields)
     ui_font_family, text_font_family = load_application_fonts()
     app_font = QFont()
-    app_font.setFamilies([ui_font_family, "Nirmala UI", "Segoe UI", "sans-serif"])
+    app_font.setFamilies([ui_font_family, "Segoe UI", "sans-serif"])
     app_font.setPointSize(10)
     app.setFont(app_font)
     app.setQuitOnLastWindowClosed(False)
