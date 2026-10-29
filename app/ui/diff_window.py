@@ -55,9 +55,9 @@ from app.core.assets import get_asset_path
 
 logger = logging.getLogger(__name__)
 
-UI_FONT_FAMILY = "Nirmala UI"
+UI_FONT_FAMILY = '"Segoe UI", "Hind Siliguri", sans-serif'
 TEXT_FIELD_FONT_FAMILY = "Bornomala Trio"
-BANGLA_FONT = "Nirmala UI"
+BANGLA_FONT = UI_FONT_FAMILY
 LOGO_BANNER_PATH = get_asset_path("logo_banner.png")
 LOGO_ICON_PATH = get_asset_path("logo_icon.png")
 LOGO_ICO_PATH = get_asset_path("logo.ico")
@@ -66,18 +66,18 @@ WINDOW_STYLESHEET = get_window_stylesheet("light", BANGLA_FONT)
 
 
 def create_ui_font(size: int = 10, weight: QFont.Weight = QFont.Weight.Normal) -> QFont:
-    """Create QFont for System UI controls using native Windows Segoe UI / Nirmala UI."""
+    """Create QFont for System UI controls using Segoe UI (English) and Hind Siliguri (Bangla)."""
     f = QFont()
-    f.setFamilies([UI_FONT_FAMILY, "Segoe UI", "sans-serif"])
+    f.setFamilies(["Segoe UI", "Hind Siliguri", "sans-serif"])
     f.setPointSize(size)
     f.setWeight(weight)
     return f
 
 
 def create_editor_font(size: int = 14) -> QFont:
-    """Create dedicated QFont for Text Fields (Input, Output, Diff) using Bornomala Trio (Bangla, Arabic, English)."""
+    """Create dedicated QFont for Text Fields (Input, Output, Diff) using Bornomala Trio."""
     f = QFont()
-    f.setFamilies([TEXT_FIELD_FONT_FAMILY, UI_FONT_FAMILY, "Segoe UI", "sans-serif"])
+    f.setFamilies([TEXT_FIELD_FONT_FAMILY, "Hind Siliguri", "Segoe UI", "sans-serif"])
     f.setPointSize(size)
     return f
 
@@ -450,7 +450,7 @@ class DiffWindow(QMainWindow):
         self.changes_table.setTextElideMode(Qt.TextElideMode.ElideNone)
         c_hdr = self.changes_table.horizontalHeader()
         c_hdr.setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
-        self.changes_table.setColumnWidth(0, 55)
+        self.changes_table.setColumnWidth(0, 68)
         c_hdr.setSectionResizeMode(1, QHeaderView.ResizeMode.Interactive)
         self.changes_table.setColumnWidth(1, 160)
         c_hdr.setSectionResizeMode(2, QHeaderView.ResizeMode.Interactive)
@@ -493,7 +493,7 @@ class DiffWindow(QMainWindow):
         
         s_hdr = self.sentence_table.horizontalHeader()
         s_hdr.setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
-        self.sentence_table.setColumnWidth(0, 55)
+        self.sentence_table.setColumnWidth(0, 68)
         s_hdr.setSectionResizeMode(1, QHeaderView.ResizeMode.Interactive)
         self.sentence_table.setColumnWidth(1, 280)
         s_hdr.setSectionResizeMode(2, QHeaderView.ResizeMode.Interactive)
@@ -778,7 +778,7 @@ class DiffWindow(QMainWindow):
             line_css = "line-height: 1.35; margin: 0; padding: 0;"
             escaped = html.escape(text).replace("\n", "<br/>")
             self.orig_edit.setHtml(
-                f"<div style='font-family: \"{BANGLA_FONT}\"; font-size: {self.editor_font_size}pt; color: {text_color}; {line_css}'>"
+                f"<div style='font-family: \"{TEXT_FIELD_FONT_FAMILY}\", \"Hind Siliguri\", sans-serif; font-size: {self.editor_font_size}pt; color: {text_color}; {line_css}'>"
                 f"{escaped}</div>"
             )
         else:
@@ -1085,6 +1085,9 @@ class DiffWindow(QMainWindow):
             self.sentence_table.setItem(row_idx, 3, reason_item)
 
         self.sentence_table.resizeRowsToContents()
+        for r in range(self.sentence_table.rowCount()):
+            h = self.sentence_table.rowHeight(r)
+            self.sentence_table.setRowHeight(r, max(h + 24, int(self.editor_font_size * 3.4)))
         self.sentence_table.blockSignals(False)
 
     def render_inline_diff(self, orig: str, corr: str):
@@ -1274,25 +1277,26 @@ class DiffWindow(QMainWindow):
 
         line_css = "line-height: 1.35; margin: 0; padding: 0;"
         text_color = "#f8fafc" if is_dark else "#0f172a"
+        text_font_css = f'font-family: "{TEXT_FIELD_FONT_FAMILY}", "Hind Siliguri", "Segoe UI", sans-serif;'
         orig_scroll = self.orig_edit.verticalScrollBar().value()
         corr_scroll = self.corr_browser.verticalScrollBar().value()
 
         self.orig_edit.blockSignals(True)
         self.orig_edit.setHtml(
-            f"<div style='font-family: \"{BANGLA_FONT}\"; font-size: {self.editor_font_size}pt; color: {text_color}; {line_css}'>"
+            f"<div style='{text_font_css} font-size: {self.editor_font_size}pt; color: {text_color}; {line_css}'>"
             f"{updated_diff.original_html}</div>"
         )
         self._apply_uniform_line_spacing(self.orig_edit)
         self.orig_edit.blockSignals(False)
 
         self.corr_browser.setHtml(
-            f"<div style='font-family: \"{BANGLA_FONT}\"; font-size: {self.editor_font_size}pt; color: {text_color}; {line_css}'>"
+            f"<div style='{text_font_css} font-size: {self.editor_font_size}pt; color: {text_color}; {line_css}'>"
             f"{updated_diff.corrected_html}</div>"
         )
         self._apply_uniform_line_spacing(self.corr_browser)
 
         self.inline_browser.setHtml(
-            f"<div style='font-family: \"{BANGLA_FONT}\"; font-size: {self.editor_font_size}pt; color: {text_color}; {line_css}'>"
+            f"<div style='{text_font_css} font-size: {self.editor_font_size}pt; color: {text_color}; {line_css}'>"
             f"{updated_diff.inline_html}</div>"
         )
         self._apply_uniform_line_spacing(self.inline_browser)
@@ -1369,7 +1373,7 @@ class DiffWindow(QMainWindow):
         # Dynamically scale Changes List table
         self.changes_table.setFont(bangla_font)
         self.changes_table.horizontalHeader().setFont(create_bangla_font(max(10, self.editor_font_size - 1)))
-        row_height = max(30, int(self.editor_font_size * 2.3))
+        row_height = max(34, int(self.editor_font_size * 2.5))
         self.changes_table.verticalHeader().setDefaultSectionSize(row_height)
         for r in range(self.changes_table.rowCount()):
             for c in range(1, 4):
@@ -1377,12 +1381,30 @@ class DiffWindow(QMainWindow):
                 if item:
                     item.setFont(bangla_font)
 
+        # Dynamically scale Sentence Polish table
+        if hasattr(self, "sentence_table"):
+            self.sentence_table.setFont(bangla_font)
+            self.sentence_table.horizontalHeader().setFont(create_bangla_font(max(10, self.editor_font_size - 1)))
+            for r in range(self.sentence_table.rowCount()):
+                for c in range(1, 4):
+                    item = self.sentence_table.item(r, c)
+                    if item:
+                        item.setFont(bangla_font)
+            self.sentence_table.resizeRowsToContents()
+            for r in range(self.sentence_table.rowCount()):
+                h = self.sentence_table.rowHeight(r)
+                self.sentence_table.setRowHeight(r, max(h + 24, int(self.editor_font_size * 3.4)))
+
         config = load_config()
         config["editor_font_size"] = self.editor_font_size
         save_config(config)
 
         if self.last_diff_result:
             self.refresh_views()
+        else:
+            txt = self._get_orig_plain_text()
+            if txt:
+                self._set_orig_plain_text(txt)
 
     def increase_font_size(self):
         self.apply_font_size(self.editor_font_size + 1)

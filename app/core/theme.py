@@ -8,7 +8,19 @@ from typing import Dict, Any
 
 from app.core.assets import get_asset_path
 
-BANGLA_FONT = "Nirmala UI"
+BANGLA_FONT = '"Segoe UI", "Hind Siliguri", sans-serif'
+
+
+def _norm_font(ff: str) -> str:
+    """Format font-family value properly for Qt QSS without breaking syntax."""
+    s = (ff or "").strip()
+    if not s:
+        return '"Segoe UI", "Hind Siliguri", sans-serif'
+    if s.startswith('"') and s.endswith('"') and s.count('"') == 2:
+        return s
+    if "," in s or '"' in s or "'" in s:
+        return s
+    return f'"{s}"'
 
 
 def get_checkmark_icon_path() -> str:
@@ -57,17 +69,18 @@ def get_effective_theme(theme_mode: str = "system") -> str:
 
 def get_window_stylesheet(effective_theme: str = "light", font_family: str = BANGLA_FONT) -> str:
     """Return main window QSS stylesheet for effective theme."""
+    font_family = _norm_font(font_family)
     chk_icon = get_checkmark_icon_path()
     if effective_theme == "dark":
         return f"""
 QMainWindow {{
     background-color: #0f172a;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 
 QWidget {{
     color: #f8fafc;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 
 QFrame#HeaderBar {{
@@ -80,13 +93,13 @@ QLabel#AppTitle {{
     font-size: 18px;
     font-weight: bold;
     color: #10b981;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 
 QLabel#AppSubtitle {{
     font-size: 11.5px;
     color: #94a3b8;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 
 QLineEdit {{
@@ -96,7 +109,7 @@ QLineEdit {{
     border-radius: 6px;
     padding: 6px 10px;
     font-size: 13px;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 
 QLineEdit:focus {{
@@ -117,7 +130,7 @@ QTabBar::tab {{
     margin-right: 4px;
     border-top-left-radius: 6px;
     border-top-right-radius: 6px;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 
 QTabBar::tab:selected {{
@@ -133,7 +146,7 @@ QTextEdit, QTextBrowser {{
     border: 1px solid #334155;
     border-radius: 6px;
     padding: 10px;
-    font-family: "{font_family}";
+    font-family: "Bornomala Trio", "Hind Siliguri", "Segoe UI", sans-serif;
 }}
 
 QTextEdit:focus, QTextBrowser:focus {{
@@ -161,7 +174,7 @@ QPushButton {{
     border: 1px solid #334155;
     background-color: #1e293b;
     color: #e2e8f0;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 
 QPushButton:hover {{
@@ -255,7 +268,11 @@ QTableWidget {{
     border: 1px solid #334155;
     gridline-color: #1e293b;
     color: #f8fafc;
-    font-family: "{font_family}";
+    font-family: {font_family};
+}}
+
+QTableWidget::item {{
+    padding: 6px 8px;
 }}
 
 QCheckBox::indicator, QTableWidget::indicator {{
@@ -288,7 +305,7 @@ QHeaderView::section {{
     color: #94a3b8;
     padding: 8px;
     border: 1px solid #334155;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 
 QProgressBar {{
@@ -333,7 +350,7 @@ QStatusBar QLabel {{
 QDialog, QMessageBox {{
     background-color: #1e293b;
     color: #f8fafc;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 
 QMessageBox QLabel {{
@@ -366,7 +383,7 @@ QComboBox {{
     padding: 6px 12px;
     font-size: 13px;
     font-weight: 600;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 
 QComboBox:hover {{
@@ -385,12 +402,12 @@ QComboBox QAbstractItemView {{
         return f"""
 QMainWindow {{
     background-color: #f8fafc;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 
 QWidget {{
     color: #0f172a;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 
 QFrame#HeaderBar {{
@@ -403,13 +420,13 @@ QLabel#AppTitle {{
     font-size: 18px;
     font-weight: bold;
     color: #0b663b;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 
 QLabel#AppSubtitle {{
     font-size: 11.5px;
     color: #64748b;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 
 QLineEdit {{
@@ -419,7 +436,7 @@ QLineEdit {{
     border-radius: 6px;
     padding: 6px 10px;
     font-size: 13px;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 
 QLineEdit:focus {{
@@ -440,7 +457,7 @@ QTabBar::tab {{
     margin-right: 4px;
     border-top-left-radius: 6px;
     border-top-right-radius: 6px;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 
 QTabBar::tab:selected {{
@@ -456,7 +473,7 @@ QTextEdit, QTextBrowser {{
     border: 1px solid #cbd5e1;
     border-radius: 6px;
     padding: 10px;
-    font-family: "{font_family}";
+    font-family: "Bornomala Trio", "Hind Siliguri", "Segoe UI", sans-serif;
 }}
 
 QTextEdit:focus, QTextBrowser:focus {{
@@ -484,7 +501,7 @@ QPushButton {{
     border: 1px solid #cbd5e1;
     background-color: #ffffff;
     color: #334155;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 
 QPushButton:hover {{
@@ -578,7 +595,11 @@ QTableWidget {{
     border: 1px solid #e2e8f0;
     gridline-color: #f1f5f9;
     color: #0f172a;
-    font-family: "{font_family}";
+    font-family: {font_family};
+}}
+
+QTableWidget::item {{
+    padding: 6px 8px;
 }}
 
 QCheckBox::indicator, QTableWidget::indicator {{
@@ -611,7 +632,7 @@ QHeaderView::section {{
     color: #475569;
     padding: 8px;
     border: 1px solid #e2e8f0;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 
 QProgressBar {{
@@ -656,7 +677,7 @@ QStatusBar QLabel {{
 QDialog, QMessageBox {{
     background-color: #ffffff;
     color: #0f172a;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 
 QMessageBox QLabel {{
@@ -689,7 +710,7 @@ QComboBox {{
     padding: 6px 12px;
     font-size: 13px;
     font-weight: 600;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 
 QComboBox:hover {{
@@ -708,13 +729,14 @@ QComboBox QAbstractItemView {{
 
 def get_settings_stylesheet(effective_theme: str = "light", font_family: str = BANGLA_FONT) -> str:
     """Return Settings Dialog QSS stylesheet for effective theme."""
+    font_family = _norm_font(font_family)
     chk_icon = get_checkmark_icon_path()
     if effective_theme == "dark":
         return f"""
 QDialog {{
     background-color: #0f172a;
     color: #f8fafc;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 
 QGroupBox {{
@@ -817,7 +839,7 @@ QPushButton {{
     font-weight: 600;
     padding: 8px 20px;
     border-radius: 6px;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 
 QPushButton#SaveKeyBtn {{
@@ -860,7 +882,7 @@ QPushButton#CancelBtn:hover {{
 QDialog {{
     background-color: #ffffff;
     color: #0f172a;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 
 QGroupBox {{
@@ -963,7 +985,7 @@ QPushButton {{
     font-weight: 600;
     padding: 8px 20px;
     border-radius: 6px;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 
 QPushButton#SaveKeyBtn {{
@@ -1004,12 +1026,13 @@ QPushButton#CancelBtn:hover {{
 
 def get_about_stylesheet(effective_theme: str = "light", font_family: str = BANGLA_FONT) -> str:
     """Return About Dialog stylesheet for effective theme."""
+    font_family = _norm_font(font_family)
     if effective_theme == "dark":
         return f"""
 QDialog {{
     background-color: #0f172a;
     color: #f8fafc;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 QLabel#AppTitle {{
     font-size: 18px;
@@ -1072,7 +1095,7 @@ QPushButton#CloseBtn:hover {{
 QDialog {{
     background-color: #ffffff;
     color: #0f172a;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 QLabel#AppTitle {{
     font-size: 18px;
@@ -1134,12 +1157,13 @@ QPushButton#CloseBtn:hover {{
 
 def get_guide_stylesheet(effective_theme: str = "light", font_family: str = BANGLA_FONT) -> str:
     """Return API Guide Dialog stylesheet for effective theme."""
+    font_family = _norm_font(font_family)
     if effective_theme == "dark":
         return f"""
 QDialog {{
     background-color: #0f172a;
     color: #f8fafc;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 QFrame#HeaderFrame {{
     background-color: #1e293b;
@@ -1211,7 +1235,7 @@ QPushButton#CloseBtn:hover {{
 QDialog {{
     background-color: #ffffff;
     color: #0f172a;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 QFrame#HeaderFrame {{
     background-color: #ffffff;
@@ -1298,19 +1322,20 @@ def get_diff_spans(is_dark: bool = False) -> Dict[str, str]:
 
 def get_messagebox_stylesheet(effective_theme: str = "light", font_family: str = BANGLA_FONT) -> str:
     """Return explicit QSS stylesheet for QMessageBox so text and background always have high contrast."""
+    font_family = _norm_font(font_family)
     if effective_theme == "dark":
         return f"""
 QMessageBox {{
     background-color: #1e293b;
     color: #f8fafc;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 QMessageBox QLabel {{
     background-color: transparent;
     color: #f8fafc;
     font-size: 13.5px;
     font-weight: 500;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 QMessageBox QPushButton {{
     background-color: #334155;
@@ -1321,7 +1346,7 @@ QMessageBox QPushButton {{
     min-width: 72px;
     font-size: 13px;
     font-weight: 600;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 QMessageBox QPushButton:hover {{
     background-color: #0b663b;
@@ -1334,14 +1359,14 @@ QMessageBox QPushButton:hover {{
 QMessageBox {{
     background-color: #ffffff;
     color: #0f172a;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 QMessageBox QLabel {{
     background-color: transparent;
     color: #0f172a;
     font-size: 13.5px;
     font-weight: 500;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 QMessageBox QPushButton {{
     background-color: #f1f5f9;
@@ -1352,7 +1377,7 @@ QMessageBox QPushButton {{
     min-width: 72px;
     font-size: 13px;
     font-weight: 600;
-    font-family: "{font_family}";
+    font-family: {font_family};
 }}
 QMessageBox QPushButton:hover {{
     background-color: #0b663b;

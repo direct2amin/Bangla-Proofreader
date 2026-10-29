@@ -173,8 +173,12 @@ class TestForeignWords(unittest.TestCase):
         self.assertIn("Copied", dlg.copy_link_btn.text())
 
     def test_default_bangla_font(self):
-        from app.ui.diff_window import BANGLA_FONT
-        self.assertTrue("Bornomala" in BANGLA_FONT or "Nirmala UI" in BANGLA_FONT)
+        from app.ui.diff_window import BANGLA_FONT, TEXT_FIELD_FONT_FAMILY
+        self.assertTrue(
+            "Bornomala" in TEXT_FIELD_FONT_FAMILY
+            or "Hind Siliguri" in BANGLA_FONT
+            or "Nirmala UI" in BANGLA_FONT
+        )
 
     def test_logo_assets_and_tray_icon_exist(self):
         from app.main import TRAY_ICON_PATH
