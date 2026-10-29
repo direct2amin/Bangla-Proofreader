@@ -46,23 +46,56 @@ logger = logging.getLogger("BanglaProofreader")
 
 
 def load_custom_bangla_font() -> str:
-    """Load Bornomala font dynamically at startup and return font family name."""
+    """Load Bornomala / Bornomala Trio fonts dynamically at startup and return primary font family name."""
     base_dir = os.path.dirname(__file__)
     candidate_paths = [
         os.path.join(base_dir, "assets", "fonts", "Bornomala-Trio-Regular.ttf"),
+        os.path.join(base_dir, "assets", "fonts", "Bornomala-Trio-Bold.ttf"),
+        os.path.join(base_dir, "assets", "fonts", "Bornomala-Regular.ttf"),
         os.path.join(base_dir, "assets", "Bornomala-Trio-Regular.ttf"),
+        os.path.join(base_dir, "assets", "Bornomala-Regular.ttf"),
         os.path.join(base_dir, "..", "assets", "fonts", "Bornomala-Trio-Regular.ttf"),
+        os.path.join(base_dir, "..", "assets", "fonts", "Bornomala-Trio-Bold.ttf"),
+        os.path.join(base_dir, "..", "assets", "fonts", "Bornomala-Regular.ttf"),
         os.path.join(base_dir, "..", "assets", "Bornomala-Trio-Regular.ttf"),
+        os.path.join(base_dir, "..", "assets", "Bornomala-Regular.ttf"),
+        os.path.join(base_dir, "..", "Bornomala-Regular.ttf"),
+        os.path.join(base_dir, "..", "Bornomala-Trio-Regular.ttf"),
     ]
 
+    # PyInstaller frozen candidates
+    if getattr(sys, "frozen", False):
+        meipass = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(sys.executable)))
+        candidate_paths.extend([
+            os.path.join(meipass, "assets", "fonts", "Bornomala-Trio-Regular.ttf"),
+            os.path.join(meipass, "assets", "fonts", "Bornomala-Trio-Bold.ttf"),
+            os.path.join(meipass, "assets", "fonts", "Bornomala-Regular.ttf"),
+            os.path.join(meipass, "assets", "Bornomala-Trio-Regular.ttf"),
+            os.path.join(meipass, "assets", "Bornomala-Regular.ttf"),
+            os.path.join(meipass, "_internal", "assets", "fonts", "Bornomala-Trio-Regular.ttf"),
+            os.path.join(meipass, "_internal", "assets", "fonts", "Bornomala-Trio-Bold.ttf"),
+            os.path.join(meipass, "_internal", "assets", "fonts", "Bornomala-Regular.ttf"),
+            os.path.join(meipass, "_internal", "assets", "Bornomala-Trio-Regular.ttf"),
+            os.path.join(meipass, "_internal", "assets", "Bornomala-Regular.ttf"),
+            os.path.join(meipass, "_internal", "app", "assets", "Bornomala-Regular.ttf"),
+        ])
+
+    loaded_families = []
     for path in candidate_paths:
         if os.path.exists(path):
             font_id = QFontDatabase.addApplicationFont(path)
             if font_id != -1:
                 families = QFontDatabase.applicationFontFamilies(font_id)
-                if families:
-                    logger.info("Successfully loaded embedded font: '%s' from %s", families[0], path)
-                    return families[0]
+                for fam in families:
+                    if fam not in loaded_families:
+                        loaded_families.append(fam)
+                        logger.info("Successfully loaded application font: '%s' from %s", fam, path)
+
+    # Prefer 'Bornomala Trio' (has Arabic + Bengali + English), then 'Bornomala', then 'Nirmala UI'
+    for preferred in ["Bornomala Trio", "Bornomala"]:
+        if preferred in loaded_families:
+            logger.info("Active primary Bengali/Arabic/English font: '%s'", preferred)
+            return preferred
 
     logger.warning("Bornomala font file not found or failed to load. Falling back to Nirmala UI.")
     return "Nirmala UI"
@@ -386,8 +419,12 @@ def main():
     app = QApplication(sys.argv)
     app.setApplicationName("Bangla Proofreader")
 
-    # Native Windows Bengali UI Font (Nirmala UI)
-    app.setFont(QFont("Nirmala UI", 10))
+    # Embedded Bengali, Arabic & English Font (Bornomala Trio / Bornomala)
+    primary_font = load_custom_bangla_font()
+    app_font = QFont()
+    app_font.setFamilies([primary_font, "Bornomala Trio", "Bornomala", "Nirmala UI"])
+    app_font.setPointSize(10)
+    app.setFont(app_font)
     app.setQuitOnLastWindowClosed(False)
 
     if os.path.exists(LOGO_ICO_PATH):
@@ -401,7 +438,7 @@ def main():
     start_minimized = any(arg in sys.argv for arg in ("--minimized", "--tray", "-m"))
     if not start_minimized:
         app_instance.show_window()
-        logger.info("Bangla Proofreader started with native font: Nirmala UI.")
+        logger.info("Bangla Proofreader started with font: %s", primary_font)
     else:
         logger.info("Bangla Proofreader started silently minimized to system tray.")
 

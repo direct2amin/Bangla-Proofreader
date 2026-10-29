@@ -55,12 +55,20 @@ from app.core.assets import get_asset_path
 
 logger = logging.getLogger(__name__)
 
-BANGLA_FONT = "Nirmala UI"
+BANGLA_FONT = 'Bornomala Trio", "Bornomala", "Nirmala UI'
 LOGO_BANNER_PATH = get_asset_path("logo_banner.png")
 LOGO_ICON_PATH = get_asset_path("logo_icon.png")
 LOGO_ICO_PATH = get_asset_path("logo.ico")
 
 WINDOW_STYLESHEET = get_window_stylesheet("light", BANGLA_FONT)
+
+
+def create_bangla_font(size: int = 14) -> QFont:
+    """Create a unified QFont supporting Bengali, Arabic, and English via Bornomala Trio fallback chain."""
+    f = QFont()
+    f.setFamilies(["Bornomala Trio", "Bornomala", "Nirmala UI"])
+    f.setPointSize(size)
+    return f
 
 
 class ProofreadWorker(QThread):
@@ -279,7 +287,7 @@ class DiffWindow(QMainWindow):
         toolbar_layout.addWidget(self.mode_lbl)
 
         self.mode_combo = QComboBox()
-        self.mode_combo.setMinimumWidth(260)
+        self.mode_combo.setMinimumWidth(210)
         self.mode_combo.addItem(t("mode_offline", self.lang), "offline")
         self.mode_combo.addItem(t("mode_online", self.lang), "online")
         active_mode = self.engine_manager.get_mode()
@@ -357,7 +365,7 @@ class DiffWindow(QMainWindow):
         right_layout.addWidget(self.corr_browser)
 
         # Standardize typography & margins for side-by-side alignment
-        bangla_font = QFont(BANGLA_FONT, self.editor_font_size)
+        bangla_font = create_bangla_font(self.editor_font_size)
         self.orig_edit.setFont(bangla_font)
         self.corr_browser.setFont(bangla_font)
         self.orig_edit.document().setDocumentMargin(8)
@@ -435,7 +443,7 @@ class DiffWindow(QMainWindow):
         # Changes Table
         self.changes_table = QTableWidget(0, 4)
         self.changes_table.setFont(bangla_font)
-        self.changes_table.horizontalHeader().setFont(QFont(BANGLA_FONT, max(10, self.editor_font_size - 1)))
+        self.changes_table.horizontalHeader().setFont(create_bangla_font(max(10, self.editor_font_size - 1)))
         self.changes_table.verticalHeader().setDefaultSectionSize(max(30, int(self.editor_font_size * 2.3)))
         self.changes_table.setWordWrap(True)
         self.changes_table.setTextElideMode(Qt.TextElideMode.ElideNone)
@@ -477,7 +485,7 @@ class DiffWindow(QMainWindow):
 
         self.sentence_table = QTableWidget(0, 4)
         self.sentence_table.setFont(bangla_font)
-        self.sentence_table.horizontalHeader().setFont(QFont(BANGLA_FONT, max(10, self.editor_font_size - 1)))
+        self.sentence_table.horizontalHeader().setFont(create_bangla_font(max(10, self.editor_font_size - 1)))
         self.sentence_table.setWordWrap(True)
         self.sentence_table.setTextElideMode(Qt.TextElideMode.ElideNone)
         self.sentence_table.verticalHeader().setDefaultSectionSize(max(42, int(self.editor_font_size * 2.8)))
@@ -797,7 +805,7 @@ class DiffWindow(QMainWindow):
             line_css = "line-height: 1.35; margin: 0; padding: 0;"
             escaped = html.escape(text).replace("\n", "<br/>")
             self.orig_edit.setHtml(
-                f"<div style='font-family: \"{BANGLA_FONT}\", \"Nirmala UI\"; font-size: {self.editor_font_size}pt; color: {text_color}; {line_css}'>"
+                f"<div style='font-family: \"{BANGLA_FONT}\"; font-size: {self.editor_font_size}pt; color: {text_color}; {line_css}'>"
                 f"{escaped}</div>"
             )
         else:
@@ -1098,7 +1106,7 @@ class DiffWindow(QMainWindow):
         self.sentence_table.setRowCount(0)
         self.accepted_sentence_ids = {c.change_id for c in polish_result.changes}
 
-        bangla_font = QFont(BANGLA_FONT, max(11, self.editor_font_size))
+        bangla_font = create_bangla_font(max(11, self.editor_font_size))
         is_dark = (self.effective_theme == "dark")
         orig_color = QColor("#f87171" if is_dark else "#dc2626")
         pol_color = QColor("#4ade80" if is_dark else "#16a34a")
@@ -1264,7 +1272,7 @@ class DiffWindow(QMainWindow):
                     orig_item.setForeground(QColor("#f8fafc"))
                     corr_item.setForeground(QColor("#f8fafc"))
 
-            table_font = QFont(BANGLA_FONT, self.editor_font_size)
+            table_font = create_bangla_font(self.editor_font_size)
             orig_item.setFont(table_font)
             corr_item.setFont(table_font)
             type_item.setFont(table_font)
@@ -1414,7 +1422,7 @@ class DiffWindow(QMainWindow):
     def apply_font_size(self, size: int):
         """Update editor and table font size within range 10pt to 22pt and persist in config."""
         self.editor_font_size = max(10, min(22, size))
-        bangla_font = QFont(BANGLA_FONT, self.editor_font_size)
+        bangla_font = create_bangla_font(self.editor_font_size)
         self.orig_edit.setFont(bangla_font)
         self.corr_browser.setFont(bangla_font)
         self.inline_browser.setFont(bangla_font)
@@ -1422,7 +1430,7 @@ class DiffWindow(QMainWindow):
 
         # Dynamically scale Changes List table
         self.changes_table.setFont(bangla_font)
-        self.changes_table.horizontalHeader().setFont(QFont(BANGLA_FONT, max(10, self.editor_font_size - 1)))
+        self.changes_table.horizontalHeader().setFont(create_bangla_font(max(10, self.editor_font_size - 1)))
         row_height = max(30, int(self.editor_font_size * 2.3))
         self.changes_table.verticalHeader().setDefaultSectionSize(row_height)
         for r in range(self.changes_table.rowCount()):

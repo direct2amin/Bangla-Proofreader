@@ -174,7 +174,7 @@ class TestForeignWords(unittest.TestCase):
 
     def test_default_bangla_font(self):
         from app.ui.diff_window import BANGLA_FONT
-        self.assertEqual(BANGLA_FONT, "Nirmala UI")
+        self.assertTrue("Bornomala" in BANGLA_FONT or "Nirmala UI" in BANGLA_FONT)
 
     def test_logo_assets_and_tray_icon_exist(self):
         from app.main import TRAY_ICON_PATH

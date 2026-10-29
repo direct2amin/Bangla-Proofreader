@@ -8,7 +8,7 @@ from typing import Dict, Any
 
 from app.core.assets import get_asset_path
 
-BANGLA_FONT = "Nirmala UI"
+BANGLA_FONT = 'Bornomala Trio", "Bornomala", "Nirmala UI'
 
 
 def get_checkmark_icon_path() -> str:
