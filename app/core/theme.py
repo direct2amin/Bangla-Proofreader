@@ -6,7 +6,14 @@ import re
 import sys
 from typing import Dict, Any
 
+from app.core.assets import get_asset_path
+
 BANGLA_FONT = "Nirmala UI"
+
+
+def get_checkmark_icon_path() -> str:
+    """Return forward-slash path to white checkmark PNG icon for QSS."""
+    return get_asset_path("checkmark.png").replace("\\", "/")
 
 
 def get_system_theme() -> str:
@@ -50,6 +57,7 @@ def get_effective_theme(theme_mode: str = "system") -> str:
 
 def get_window_stylesheet(effective_theme: str = "light", font_family: str = BANGLA_FONT) -> str:
     """Return main window QSS stylesheet for effective theme."""
+    chk_icon = get_checkmark_icon_path()
     if effective_theme == "dark":
         return f"""
 QMainWindow {{
@@ -250,8 +258,8 @@ QTableWidget {{
 }}
 
 QCheckBox::indicator, QTableWidget::indicator {{
-    width: 17px;
-    height: 17px;
+    width: 18px;
+    height: 18px;
     border-radius: 4px;
     border: 1.5px solid #475569;
     background-color: #1e293b;
@@ -259,11 +267,18 @@ QCheckBox::indicator, QTableWidget::indicator {{
 
 QCheckBox::indicator:hover, QTableWidget::indicator:hover {{
     border-color: #10b981;
+    background-color: #334155;
 }}
 
 QCheckBox::indicator:checked, QTableWidget::indicator:checked {{
-    background-color: #10b981;
-    border-color: #10b981;
+    background-color: #0b663b;
+    border-color: #0b663b;
+    image: url({chk_icon});
+}}
+
+QCheckBox::indicator:checked:hover, QTableWidget::indicator:checked:hover {{
+    background-color: #08502e;
+    border-color: #08502e;
 }}
 
 QHeaderView::section {{
@@ -565,20 +580,27 @@ QTableWidget {{
 }}
 
 QCheckBox::indicator, QTableWidget::indicator {{
-    width: 17px;
-    height: 17px;
+    width: 18px;
+    height: 18px;
     border-radius: 4px;
-    border: 1.5px solid #94a3b8;
+    border: 1.5px solid #cbd5e1;
     background-color: #ffffff;
 }}
 
 QCheckBox::indicator:hover, QTableWidget::indicator:hover {{
     border-color: #0b663b;
+    background-color: #f8fafc;
 }}
 
 QCheckBox::indicator:checked, QTableWidget::indicator:checked {{
     background-color: #0b663b;
     border-color: #0b663b;
+    image: url({chk_icon});
+}}
+
+QCheckBox::indicator:checked:hover, QTableWidget::indicator:checked:hover {{
+    background-color: #08502e;
+    border-color: #08502e;
 }}
 
 QHeaderView::section {{
@@ -684,6 +706,7 @@ QComboBox QAbstractItemView {{
 
 def get_settings_stylesheet(effective_theme: str = "light", font_family: str = BANGLA_FONT) -> str:
     """Return Settings Dialog QSS stylesheet for effective theme."""
+    chk_icon = get_checkmark_icon_path()
     if effective_theme == "dark":
         return f"""
 QDialog {{
@@ -761,6 +784,30 @@ QCheckBox {{
     color: #f8fafc;
     font-size: 13px;
     spacing: 8px;
+}}
+
+QCheckBox::indicator {{
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 1.5px solid #475569;
+    background-color: #1e293b;
+}}
+
+QCheckBox::indicator:hover {{
+    border-color: #10b981;
+    background-color: #334155;
+}}
+
+QCheckBox::indicator:checked {{
+    background-color: #0b663b;
+    border-color: #0b663b;
+    image: url({chk_icon});
+}}
+
+QCheckBox::indicator:checked:hover {{
+    background-color: #08502e;
+    border-color: #08502e;
 }}
 
 QPushButton {{
@@ -883,6 +930,30 @@ QCheckBox {{
     color: #1e293b;
     font-size: 13px;
     spacing: 8px;
+}}
+
+QCheckBox::indicator {{
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 1.5px solid #cbd5e1;
+    background-color: #ffffff;
+}}
+
+QCheckBox::indicator:hover {{
+    border-color: #0b663b;
+    background-color: #f8fafc;
+}}
+
+QCheckBox::indicator:checked {{
+    background-color: #0b663b;
+    border-color: #0b663b;
+    image: url({chk_icon});
+}}
+
+QCheckBox::indicator:checked:hover {{
+    background-color: #08502e;
+    border-color: #08502e;
 }}
 
 QPushButton {{

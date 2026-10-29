@@ -313,16 +313,13 @@ class BanglaProofreaderApp:
         self.quick_convert_worker.start()
 
     def on_quick_convert_already_unicode(self):
-        """Show informative dialog when user presses Ctrl+Alt+C on text that is already in Unicode."""
-        logger.info("Selected text is already in Unicode. Displaying safety notification dialog.")
-        from app.core.theme import show_themed_message_box
-        show_themed_message_box(
-            self.diff_window,
-            "information",
-            t("unicode_already_detected_title", self.diff_window.lang),
-            t("unicode_already_detected_msg", self.diff_window.lang),
-            effective_theme=self.diff_window.effective_theme,
-        )
+        """Handle already-Unicode text safely and silently (sound notification only, zero intrusive popups)."""
+        logger.info("QuickConvert: Selected text is already in standard Unicode Bengali. Conversion skipped silently.")
+        try:
+            import winsound
+            winsound.MessageBeep(winsound.MB_ICONASTERISK)
+        except Exception:
+            pass
 
     def on_quick_convert_finished(self, success: bool, char_count: int):
         if success:
@@ -382,7 +379,7 @@ def main():
     if sys.platform.startswith("win"):
         try:
             import ctypes
-            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("amin.banglaproofreader.desktop.1.6.0")
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("amin.banglaproofreader.desktop.1.7.0")
         except Exception:
             pass
 

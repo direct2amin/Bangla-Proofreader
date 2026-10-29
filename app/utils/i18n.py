@@ -101,7 +101,7 @@ MESSAGES = {
         # About Dialog
         "about_dialog_title": "About Bangla Proofreader",
         "about_app_name": "বাংলা প্রুফরিডার (Bangla Proofreader)",
-        "about_version": "Version 1.6.0",
+        "about_version": "Version 1.7.0",
         "about_developer_label": "Developer / Publisher:",
         "about_developer_name": "Amin",
         "about_portfolio_label": "Portfolio / GitHub:",
@@ -230,7 +230,7 @@ MESSAGES = {
         # About Dialog
         "about_dialog_title": "About Bangla Proofreader",
         "about_app_name": "বাংলা প্রুফরিডার (Bangla Proofreader)",
-        "about_version": "ভার্সন ১.৬.০",
+        "about_version": "ভার্সন ১.৭.০",
         "about_developer_label": "ডেভেলপার / প্রকাশক:",
         "about_developer_name": "আমিন",
         "about_portfolio_label": "পোর্টফোলিও / গিটহাব:",

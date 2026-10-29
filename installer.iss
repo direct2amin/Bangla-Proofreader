@@ -2,7 +2,7 @@
 ; Generates standalone setup installer with custom installation directory choice and logo branding.
 
 #define MyAppName "Bangla Proofreader"
-#define MyAppVersion "1.6.0"
+#define MyAppVersion "1.7.0"
 #define MyAppPublisher "Amin"
 #define MyAppURL "https://direct2amin.github.io/aminsweb"
 #define MyAppExeName "BanglaProofreader.exe"
@@ -46,8 +46,8 @@ Source: "assets\*"; DestDir: "{app}\assets"; Flags: ignoreversion recursesubdirs
 Source: "assets\*"; DestDir: "{app}\app\assets"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\assets\logo.ico"; AppUserModelID: "amin.banglaproofreader.desktop.1.6.0"
-Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\assets\logo.ico"; Tasks: desktopicon; AppUserModelID: "amin.banglaproofreader.desktop.1.6.0"
+Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\assets\logo.ico"; AppUserModelID: "amin.banglaproofreader.desktop.1.7.0"
+Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\assets\logo.ico"; Tasks: desktopicon; AppUserModelID: "amin.banglaproofreader.desktop.1.7.0"
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent

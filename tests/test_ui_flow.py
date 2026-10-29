@@ -111,6 +111,41 @@ class TestDiffWindowUI(unittest.TestCase):
         window.on_worker_finished(corr, diff_res)
         self.assertIn("Ctrl+Alt+X", window.shortcut_status_label.text())
 
+    def test_compact_model_combobox_and_modern_checkboxes(self):
+        from app.ui.settings_dialog import CompactModelComboBox, SettingsDialog
+        from app.core.theme import get_settings_stylesheet, get_window_stylesheet
+        from app.core.config import DEFAULT_CONFIG
+
+        combo = CompactModelComboBox()
+        combo.addItem("gemini-3.5-flash-lite (Ultra-fast ~0.8s - Recommended)", "gemini-3.5-flash-lite")
+        combo.addItem("gemini-3.5-flash (High Accuracy ~3s)", "gemini-3.5-flash")
+
+        # Size hints remain compact
+        sz = combo.sizeHint()
+        self.assertLessEqual(sz.width(), 260)
+
+        # Settings stylesheet contains checkmark icon path for modern UI
+        qss_light = get_settings_stylesheet("light")
+        self.assertIn("checkmark.png", qss_light)
+        self.assertIn("QCheckBox::indicator:checked", qss_light)
+
+        qss_dark = get_settings_stylesheet("dark")
+        self.assertIn("checkmark.png", qss_dark)
+
+        # Main window stylesheet also contains modern checkmark
+        win_qss = get_window_stylesheet("light")
+        self.assertIn("checkmark.png", win_qss)
+
+    def test_quick_convert_silent_already_unicode(self):
+        from app.main import BanglaProofreaderApp
+        from unittest.mock import patch
+
+        app_inst = BanglaProofreaderApp()
+        # Verify on_quick_convert_already_unicode runs without throwing any popup
+        with patch("winsound.MessageBeep") as mock_beep:
+            app_inst.on_quick_convert_already_unicode()
+            mock_beep.assert_called_once()
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -10,7 +10,7 @@ try:
     from PyQt6.QtWidgets import (
         QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
         QPushButton, QGroupBox, QFormLayout, QCheckBox, QMessageBox,
-        QComboBox
+        QComboBox, QStyleOptionComboBox, QStylePainter, QStyle
     )
 except ImportError:
     from PySide6.QtCore import Qt
@@ -18,7 +18,7 @@ except ImportError:
     from PySide6.QtWidgets import (
         QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
         QPushButton, QGroupBox, QFormLayout, QCheckBox, QMessageBox,
-        QComboBox
+        QComboBox, QStyleOptionComboBox, QStylePainter, QStyle
     )
 
 from app.core.config import load_config, save_config
@@ -136,6 +136,31 @@ QPushButton#CancelBtn:hover {
 """
 
 
+class CompactModelComboBox(QComboBox):
+    """Modern QComboBox that renders clean model ID when closed/collapsed,
+    while displaying full informative descriptions in the dropdown popup list."""
+
+    def paintEvent(self, event):
+        opt = QStyleOptionComboBox()
+        self.initStyleOption(opt)
+        # Strip parenthesized descriptions when displaying closed combobox
+        if "(" in opt.currentText:
+            opt.currentText = opt.currentText.split("(")[0].strip()
+        painter = QStylePainter(self)
+        painter.drawComplexControl(QStyle.ComplexControl.CC_ComboBox, opt)
+        painter.drawControl(QStyle.ControlElement.CE_ComboBoxLabel, opt)
+
+    def sizeHint(self):
+        sz = super().sizeHint()
+        sz.setWidth(min(sz.width(), 260))
+        return sz
+
+    def minimumSizeHint(self):
+        sz = super().minimumSizeHint()
+        sz.setWidth(min(sz.width(), 200))
+        return sz
+
+
 class SettingsDialog(QDialog):
     """Configuration dialog for Bangla Proofreader."""
 
@@ -148,7 +173,8 @@ class SettingsDialog(QDialog):
 
         # Keep title in English on Windows title bar to prevent tofu squares
         self.setWindowTitle("Settings - Bangla Proofreader")
-        self.resize(520, 460)
+        self.resize(500, 470)
+        self.setMaximumWidth(520)
         apply_win32_titlebar_theme(self, self.effective_theme)
         self.setStyleSheet(get_settings_stylesheet(self.effective_theme))
 
@@ -229,7 +255,10 @@ class SettingsDialog(QDialog):
         model_lbl = QLabel(t("settings_model_label", self.lang))
         model_lbl.setFixedWidth(70)
 
-        self.model_combo = QComboBox()
+        self.model_combo = CompactModelComboBox()
+        self.model_combo.setMinimumWidth(200)
+        self.model_combo.setMaximumWidth(280)
+        self.model_combo.view().setMinimumWidth(380)
         cur_model = self.config.get("gemini_model", "gemini-3.5-flash-lite")
         from app.core.config import CURATED_GEMINI_MODELS
         for m_id, m_label in CURATED_GEMINI_MODELS:
