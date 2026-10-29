@@ -55,7 +55,9 @@ from app.core.assets import get_asset_path
 
 logger = logging.getLogger(__name__)
 
-BANGLA_FONT = 'Bornomala Trio", "Bornomala", "Nirmala UI'
+UI_FONT_FAMILY = "Hind Siliguri"
+TEXT_FIELD_FONT_FAMILY = "Bornomala Trio"
+BANGLA_FONT = 'Hind Siliguri", "Nirmala UI", "Segoe UI", sans-serif'
 LOGO_BANNER_PATH = get_asset_path("logo_banner.png")
 LOGO_ICON_PATH = get_asset_path("logo_icon.png")
 LOGO_ICO_PATH = get_asset_path("logo.ico")
@@ -63,12 +65,26 @@ LOGO_ICO_PATH = get_asset_path("logo.ico")
 WINDOW_STYLESHEET = get_window_stylesheet("light", BANGLA_FONT)
 
 
-def create_bangla_font(size: int = 14) -> QFont:
-    """Create a unified QFont supporting Bengali, Arabic, and English via Bornomala Trio fallback chain."""
+def create_ui_font(size: int = 10, weight: QFont.Weight = QFont.Weight.Normal) -> QFont:
+    """Create QFont for System UI controls (buttons, tabs, headers, status) using Hind Siliguri."""
     f = QFont()
-    f.setFamilies(["Bornomala Trio", "Bornomala", "Nirmala UI"])
+    f.setFamilies([UI_FONT_FAMILY, "Nirmala UI", "Segoe UI", "sans-serif"])
+    f.setPointSize(size)
+    f.setWeight(weight)
+    return f
+
+
+def create_editor_font(size: int = 14) -> QFont:
+    """Create dedicated QFont for Text Fields (Input, Output, Diff) using Bornomala Trio (Bangla, Arabic, English)."""
+    f = QFont()
+    f.setFamilies([TEXT_FIELD_FONT_FAMILY, UI_FONT_FAMILY, "Nirmala UI", "sans-serif"])
     f.setPointSize(size)
     return f
+
+
+def create_bangla_font(size: int = 14) -> QFont:
+    """Compatibility alias pointing to create_editor_font."""
+    return create_editor_font(size)
 
 
 class ProofreadWorker(QThread):
@@ -278,22 +294,6 @@ class DiffWindow(QMainWindow):
         self.clear_btn = QPushButton()
         self.clear_btn.clicked.connect(self.clear_all)
         toolbar_layout.addWidget(self.clear_btn)
-
-        toolbar_layout.addSpacing(12)
-
-        # Mode Selector: Offline (Local Dictionary - Instant) vs Online AI (Gemini AI - Contextual)
-        self.mode_lbl = QLabel(t("mode_label", self.lang))
-        self.mode_lbl.setStyleSheet("font-weight: 600; color: #475569; font-size: 13px;")
-        toolbar_layout.addWidget(self.mode_lbl)
-
-        self.mode_combo = QComboBox()
-        self.mode_combo.setMinimumWidth(210)
-        self.mode_combo.addItem(t("mode_offline", self.lang), "offline")
-        self.mode_combo.addItem(t("mode_online", self.lang), "online")
-        active_mode = self.engine_manager.get_mode()
-        self.mode_combo.setCurrentIndex(0 if active_mode == "offline" else 1)
-        self.mode_combo.currentIndexChanged.connect(self.on_mode_changed)
-        toolbar_layout.addWidget(self.mode_combo)
 
         toolbar_layout.addStretch()
 
@@ -584,12 +584,6 @@ class DiffWindow(QMainWindow):
         self.settings_btn.setText(f"⚙ {t('settings_btn', lang)}")
         self.about_btn.setText(t("about_btn", lang))
         self.zoom_lbl.setText(t("zoom_label", lang))
-        self.mode_lbl.setText(t("mode_label", lang))
-
-        self.mode_combo.blockSignals(True)
-        self.mode_combo.setItemText(0, t("mode_offline", lang))
-        self.mode_combo.setItemText(1, t("mode_online", lang))
-        self.mode_combo.blockSignals(False)
 
         if lang == "en":
             self.lang_btn.setText("🌐 English")
@@ -674,7 +668,6 @@ class DiffWindow(QMainWindow):
         if is_dark:
             self.api_lbl.setStyleSheet("font-weight: 600; color: #94a3b8;")
             self.zoom_lbl.setStyleSheet("font-weight: 600; color: #94a3b8; font-size: 13px;")
-            self.mode_lbl.setStyleSheet("font-weight: 600; color: #94a3b8; font-size: 13px;")
             self.orig_header.setStyleSheet("font-weight: bold; color: #f87171;")
             self.corr_header.setStyleSheet("font-weight: bold; color: #4ade80;")
             self.inline_header.setStyleSheet("font-weight: bold; color: #cbd5e1;")
@@ -688,7 +681,6 @@ class DiffWindow(QMainWindow):
         else:
             self.api_lbl.setStyleSheet("font-weight: 600; color: #475569;")
             self.zoom_lbl.setStyleSheet("font-weight: 600; color: #475569; font-size: 13px;")
-            self.mode_lbl.setStyleSheet("font-weight: 600; color: #475569; font-size: 13px;")
             self.orig_header.setStyleSheet("font-weight: bold; color: #dc2626;")
             self.corr_header.setStyleSheet("font-weight: bold; color: #16a34a;")
             self.inline_header.setStyleSheet("font-weight: bold; color: #334155;")
@@ -699,14 +691,6 @@ class DiffWindow(QMainWindow):
             self.progress_log_lbl.setStyleSheet("color: #2563eb; font-weight: 600; font-size: 12px; margin-left: 6px;")
             if hasattr(self, "status_bar_separator"):
                 self.status_bar_separator.setStyleSheet("color: #94a3b8; font-weight: 400;")
-
-    def on_mode_changed(self, _index: int = 0):
-        """Handle switching between Offline (Local Dictionary) and Online AI (Gemini) modes."""
-        selected_mode = self.mode_combo.currentData() or "online"
-        self.engine_manager.set_mode(selected_mode)
-        self.update_api_status_banner()
-        if self._get_orig_plain_text().strip():
-            self.run_proofread()
 
     def open_api_guide(self):
         """Show API key instructions dialog."""
@@ -719,21 +703,9 @@ class DiffWindow(QMainWindow):
         dialog.exec()
 
     def update_api_status_banner(self):
-        """Update top banner based on active mode, API key validity, and active theme."""
+        """Update top banner based on API key validity and active theme."""
         is_dark = (self.effective_theme == "dark")
-        if self.engine_manager.get_mode() == "offline":
-            self.status_banner.setText(t("offline_ready", self.lang))
-            if is_dark:
-                self.status_banner.setStyleSheet(
-                    "background-color: #064e3b; color: #6ee7b7; border: 1px solid #047857; "
-                    "border-radius: 6px; padding: 6px 12px; font-size: 13px; font-weight: 500;"
-                )
-            else:
-                self.status_banner.setStyleSheet(
-                    "background-color: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; "
-                    "border-radius: 6px; padding: 6px 12px; font-size: 13px; font-weight: 500;"
-                )
-        elif self.engine_manager.is_gemini_available():
+        if self.engine_manager.is_gemini_available():
             self.status_banner.setText(t("api_ready", self.lang))
             if is_dark:
                 self.status_banner.setStyleSheet(
@@ -846,19 +818,9 @@ class DiffWindow(QMainWindow):
         self.replace_btn.setEnabled(enabled)
         self.save_key_btn.setEnabled(enabled)
         self.lang_btn.setEnabled(enabled)
-        self.mode_combo.setEnabled(enabled)
-
-    def switch_to_offline_automatically(self):
-        """Automatically switch to Offline Mode when internet is disconnected, until user manually switches back."""
-        self.engine_manager.set_mode("offline")
-        self.mode_combo.blockSignals(True)
-        self.mode_combo.setCurrentIndex(0)
-        self.mode_combo.blockSignals(False)
-        self.update_api_status_banner()
-        self.show_feedback(t("auto_offline_feedback", self.lang))
 
     def run_proofread(self):
-        """Execute proofreading in Offline (Instant) or Online AI (Gemini) mode."""
+        """Execute proofreading using Gemini AI (with instant offline Bijoy-to-Unicode conversion if needed)."""
         original_text = self._get_orig_plain_text().strip()
         if not original_text:
             self.stats_label.setText(t("no_input_warn", self.lang))
@@ -872,22 +834,14 @@ class DiffWindow(QMainWindow):
             original_text = convert_bijoy_to_unicode(original_text)
             self._set_orig_plain_text(original_text)
 
-        active_mode = self.engine_manager.get_mode()
-        if active_mode == "online" and not self.engine_manager.is_internet_available():
-            logger.info("No internet connection detected during online proofread. Auto-switching to Offline Mode.")
-            self.switch_to_offline_automatically()
-            active_mode = "offline"
-
-        if active_mode == "offline":
-            try:
-                corrected_text = self.engine_manager.proofread(original_text, mode="offline")
-                diff_result = DiffHighlighter.compute_diff(
-                    original_text, corrected_text, is_dark=(self.effective_theme == "dark")
-                )
-                self.on_worker_finished(corrected_text, diff_result)
-            except Exception as e:
-                logger.error("Offline proofread error: %s", e)
-                self.on_worker_error(str(e))
+        if not self.engine_manager.is_internet_available():
+            show_themed_message_box(
+                self,
+                "warning",
+                t("no_internet_title", self.lang),
+                t("no_internet_msg", self.lang),
+                effective_theme=self.effective_theme,
+            )
             return
 
         if not self.engine_manager.is_gemini_available():
@@ -974,23 +928,6 @@ class DiffWindow(QMainWindow):
         self.set_actions_enabled(True)
         self.update_shortcut_status()
 
-        err_lower = str(err_msg).lower()
-        if any(k in err_lower for k in (
-            "connection", "timeout", "network", "socket", "getaddrinfo",
-            "nameresolutionerror", "failed to establish a new connection",
-            "429", "resource_exhausted", "quota"
-        )):
-            logger.info("Online error during proofread (%s). Auto-switching to Offline Mode.", err_msg)
-            self.switch_to_offline_automatically()
-            original_text = self._get_orig_plain_text().strip()
-            if original_text:
-                corrected_text = self.engine_manager.proofread(original_text, mode="offline")
-                diff_result = DiffHighlighter.compute_diff(
-                    original_text, corrected_text, is_dark=(self.effective_theme == "dark")
-                )
-                self.on_worker_finished(corrected_text, diff_result)
-            return
-
         formatted_msg = format_gemini_error(err_msg, self.lang)
         show_themed_message_box(
             self,
@@ -1043,13 +980,13 @@ class DiffWindow(QMainWindow):
             )
             return
 
-        # Sentence Polish requires Online AI mode and internet
-        if self.engine_manager.get_mode() == "offline" or not self.engine_manager.is_internet_available():
+        # Sentence Polish requires internet connection
+        if not self.engine_manager.is_internet_available():
             show_themed_message_box(
                 self,
                 "warning",
-                t("guardrail_title", self.lang),
-                t("polish_offline_warn", self.lang),
+                t("no_internet_title", self.lang),
+                t("no_internet_msg", self.lang),
                 effective_theme=self.effective_theme,
             )
             return

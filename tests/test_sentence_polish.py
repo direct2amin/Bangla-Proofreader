@@ -85,12 +85,13 @@ class TestSentencePolishAndTwoTierWorkflow(unittest.TestCase):
 
     def test_sequence_guardrail_allows_sentence_polish_after_spelling_checked(self):
         """Verify spelling_checked becomes True after word-level proofread and resets on edit."""
+        from app.utils.diff_highlighter import DiffResult
         engine_mgr = EngineManager(check_network_on_init=False)
-        engine_mgr.set_mode("offline")
         window = DiffWindow(engine_manager=engine_mgr)
 
-        window.set_input_text("এটি একটি ভূল বাক্য।")
-        # After proofread completes, spelling_checked is True
+        self.assertFalse(window.spelling_checked)
+        # When worker completes proofreading
+        window.on_worker_finished("এটি একটি ভুল বাক্য।", DiffResult(original_html="", corrected_html="", inline_html="", changes=[]))
         self.assertTrue(window.spelling_checked)
 
         # Modifying text in orig_edit resets spelling_checked to False

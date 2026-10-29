@@ -69,51 +69,34 @@ class TestOfflineCheckerAndModeSwitcher(unittest.TestCase):
         self.assertEqual(levenshtein_distance("তামায়", "তোমায়"), 1)
         self.assertGreater(levenshtein_distance("বাংলাদেশ", "আন্তর্জাতিক", max_dist=1), 1)
 
-    def test_ui_mode_switcher_and_offline_bijoy_pipeline(self):
+    def test_ui_offline_bijoy_conversion_on_input(self):
+        """Verify that Bijoy text input is instantly auto-converted to Unicode, and mode_combo is removed."""
         engine_mgr = EngineManager(check_network_on_init=False)
-        engine_mgr.set_mode("offline")
         window = DiffWindow(engine_manager=engine_mgr)
         window.lang = "en"
         window.apply_language()
 
-        self.assertEqual(window.mode_combo.count(), 2)
-        self.assertEqual(window.mode_combo.itemText(0), "Offline (Local Dictionary- Instant)")
-        self.assertEqual(window.mode_combo.itemText(1), "Online AI (Gemini AI - Contextual)")
-        self.assertEqual(window.mode_combo.currentData(), "offline")
+        # Offline mode selector combobox must not exist in UI
+        self.assertFalse(hasattr(window, "mode_combo"))
 
-        bijoy_with_typo = "Avgvi †mvbvi evsjv| Avwg Zvgvq fv‡jvevwm|"
-        window.set_input_text(bijoy_with_typo)
+        bijoy_sample = "Avgvi †mvbvi evsjv| Avwg †Zvgvq fv‡jvevwm|"
+        with patch.object(window, "run_proofread"):
+            window.set_input_text(bijoy_sample)
 
         self.assertEqual(
             unicodedata.normalize("NFC", window._get_orig_plain_text().strip()),
-            unicodedata.normalize("NFC", "আমার সোনার বাংলা। আমি তামায় ভালোবাসি।")
-        )
-        self.assertIsNotNone(window.last_diff_result)
-        self.assertEqual(
-            unicodedata.normalize("NFC", window.corr_browser.toPlainText().strip()),
             unicodedata.normalize("NFC", "আমার সোনার বাংলা। আমি তোমায় ভালোবাসি।")
         )
-        self.assertEqual(window.changes_table.rowCount(), 1)
-        engine_mgr.set_mode("online")
 
-    def test_auto_offline_fallback_when_no_internet(self):
-        """Verify app automatically switches to Offline Mode when PC has no internet connection."""
+    def test_proofread_warns_when_no_internet(self):
+        """Verify app displays warning gracefully without crashing when PC has no internet connection."""
         engine_mgr = EngineManager(check_network_on_init=False)
-        engine_mgr.set_mode("online")
         window = DiffWindow(engine_manager=engine_mgr)
-        self.assertEqual(window.mode_combo.currentData(), "online")
 
-        with patch.object(EngineManager, "is_internet_available", return_value=False):
-            window.set_input_text("এটি একটি ভূল বানান।")
-            # Must automatically switch to offline mode and complete proofreading
-            self.assertEqual(engine_mgr.get_mode(), "offline")
-            self.assertEqual(window.mode_combo.currentData(), "offline")
-            self.assertEqual(
-                unicodedata.normalize("NFC", window.corr_browser.toPlainText().strip()),
-                unicodedata.normalize("NFC", "এটি একটি ভুল বানান।")
-            )
-
-        engine_mgr.set_mode("online")
+        with patch.object(EngineManager, "is_internet_available", return_value=False), \
+             patch("app.ui.diff_window.show_themed_message_box") as mock_msg:
+            window.set_input_text("এটি একটি বাংলা বাক্য।")
+            mock_msg.assert_called_once()
 
     def test_morphological_stemming_and_reinflection_engine(self):
         """Verify decompose_word, root correction, and suffix re-attachment."""
